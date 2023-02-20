@@ -1,5 +1,3 @@
-# ARCHIVED AS I NO LONGER REGULARLY USE THIS.
-
 # wofi-pass
 ```
 Usage: wofi-pass [options]
