@@ -1,4 +1,6 @@
-#!/bin/sh
+#!/bin/bash
+
+VERSION="23.1.0"
 
 set -eu
 
@@ -74,14 +76,21 @@ _pass_get() {
 }
 
 _usage() {
-	printf "Usage: wofi-pass [options]\n"
-	printf "	-a, --autotype		autotype whatever entry is chosen\n"
-	printf "	-c, --copy=[cmd]	copy to clipboard. Defaults to wl-copy if no cmd is given.\n"
-	printf "	-f, --fileisuser	use the name of the password file as username\n"
-	printf "	-h, --help		show this help message\n"
-	printf "	-s, --squash		don't show field choice if password file only contains password\n"
-	printf "	-t, --type=[cmd]	type the selection instead of copying to clipboard.\n"
-	printf "				Defaults to wtype if no cmd is given.\n"
+	cat <<EOF
+	Usage:
+	wofi-pass [options]
+
+	Options:
+		-a, --autotype    autotype whatever entry is chosen
+		-c, --copy=[cmd]  copy to clipboard. Defaults to wl-copy if no cmd is given.
+		-f, --fileisuser  use the name of the password file as username
+		-h, --help        show this help message
+		-s, --squash      don't show field choice if password file only contains password
+		-t, --type=[cmd]  type the selection instead of copying to clipboard.
+		                  Defaults to wtype if no cmd is given.
+
+	wofi-pass version ${VERSION}
+EOF
 }
 
 OPTS="$(getopt --options ac::fhst:: --longoptions autotype,copy::,fileisuser,help,squash,type:: -n 'wofi-pass' -- "$@")"
