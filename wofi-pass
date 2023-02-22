@@ -15,7 +15,7 @@ FLAG_HELP=0
 CMD_COPY="wl-copy"
 CMD_TYPE="wtype -"
 
-_trim() {
+function _trim() {
     var="$*"
     # remove leading whitespace characters
     var="${var#"${var%%[![:space:]]*}"}"
@@ -26,7 +26,7 @@ _trim() {
 
 # the explicit newlines here are funky, but needed due to command substitution
 # stripping trailing newlines so `printf '%s\n' "$line"` cannot be used
-_parse_fields() {
+function _parse_fields() {
 	has_username=0
 	fields="$(pass show "$password" | tail -n +2 | cut -d: -f1 -s)"
 	field_list="password
@@ -59,11 +59,11 @@ _parse_fields() {
 	printf '%s' "$field_list"
 }
 
-_pass_field() {
+function _pass_field() {
 	_trim "$(pass show "$password" | tail -n+2 | grep "^${*}:.*$" | cut -d: -f1 -s --complement)"
 }
 
-_pass_get() {
+function _pass_get() {
 	if [ "$1" = "password" ]; then
 		pass show "$password" | { IFS= read -r pass; printf %s "$pass"; }
 	elif [ "$1" = "OTP" ]; then
@@ -75,7 +75,7 @@ _pass_get() {
 	fi
 }
 
-_usage() {
+function _usage() {
 	cat <<EOF
 	Usage:
 	wofi-pass [options]
