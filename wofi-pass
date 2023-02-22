@@ -16,7 +16,7 @@ CMD_COPY="wl-copy"
 CMD_TYPE="wtype -"
 
 function _trim() {
-    var="${*}"
+    local var="${*}"
     # remove leading whitespace characters
     var="${var#"${var%%[![:space:]]*}"}"
     # remove trailing whitespace characters
@@ -26,17 +26,19 @@ function _trim() {
 
 # the explicit newlines here are funky, but needed due to command substitution
 # stripping trailing newlines so `printf '%s\n' "${line}"` cannot be used
-function _parse_fields() {
-    has_username=0
-    fields="$(pass show "${password}" | tail -n +2 | cut -d: -f1 -s)"
-    field_list="password
+function parse_fields() {
+    local has_username=0
+    local -r fields="$(pass show "${password}" | tail -n +2 | cut -d: -f1 -s)"
+    local field_list="password
 "
+
     if [ "${FLAG_FILEASUSER}" -eq 1 ]; then
         has_username=1
         line="username"
         field_list="${field_list}${line}
 "
     fi
+
     for line in ${fields}; do
         if [ "${line}" = "username" ]; then
             has_username=1
@@ -52,18 +54,20 @@ function _parse_fields() {
 "
         fi
     done
+
     if [ "${FLAG_TYPE}" -eq 1 ] && [ "${has_username}" -eq 1 ]; then
         printf "autotype
 "
     fi
+
     printf '%s' "${field_list}"
 }
 
-function _pass_field() {
+function pass_field() {
     _trim "$(pass show "${password}" | tail -n+2 | grep "^${*}:.*$" | cut -d: -f1 -s --complement)"
 }
 
-function _pass_get() {
+function pass_get() {
     if [ "${1}" = "password" ]; then
         pass show "${password}" | { IFS= read -r pass; printf %s "${pass}"; }
     elif [ "${1}" = "OTP" ]; then
@@ -71,11 +75,11 @@ function _pass_get() {
     elif [ "${FLAG_FILEASUSER}" -eq 1 ] && [ "${1}" = "username" ]; then
         printf %s "${passname}"
     else
-        _pass_field "${@}"
+        pass_field "${@}"
     fi
 }
 
-function _usage() {
+function usage() {
     cat <<EOF
     Usage:
     wofi-pass [options]
@@ -93,93 +97,97 @@ function _usage() {
 EOF
 }
 
-OPTS="$(getopt --options ac::fhst:: --longoptions autotype,copy::,fileisuser,help,squash,type:: -n 'wofi-pass' -- "${@}")"
-eval set -- "${OPTS}"
-while true; do
-    case "${1}" in
-        -a | --autotype) FLAG_AUTOTYPE=1; shift ;;
-        -c) FLAG_COPY=1; copy_cmd="${CMD_COPY}"; shift ;;
-        --copy)
-            FLAG_COPY=1
-            if [ -n "${2}" ]; then
-                copy_cmd="${2}"
-                shift 2
-            else
-                copy_cmd="${CMD_COPY}"
-                shift
-            fi;;
-        -f | --fileisuser) FLAG_FILEASUSER=1; shift;;
-        -h | --help) FLAG_HELP=1; shift ;;
-        -s | --squash) FLAG_SQUASH=1; shift ;;
-        -t) FLAG_TYPE=1; type_cmd="${CMD_TYPE}"; shift ;;
-        --type)
-            FLAG_TYPE=1
-            if [ -n "${2}" ]; then
-                type_cmd="${2}"
-                shift 2
-            else
-                type_cmd="${CMD_TYPE}"
-                shift
-            fi ;;
-        --) shift; break;;
-        *) break;;
-  esac
-done
+function main() {
+    OPTS="$(getopt --options ac::fhst:: --longoptions autotype,copy::,fileisuser,help,squash,type:: -n 'wofi-pass' -- "${@}")"
+    eval set -- "${OPTS}"
+    while true; do
+        case "${1}" in
+            -a | --autotype) FLAG_AUTOTYPE=1; shift ;;
+            -c) FLAG_COPY=1; copy_cmd="${CMD_COPY}"; shift ;;
+            --copy)
+                FLAG_COPY=1
+                if [ -n "${2}" ]; then
+                    copy_cmd="${2}"
+                    shift 2
+                else
+                    copy_cmd="${CMD_COPY}"
+                    shift
+                fi;;
+            -f | --fileisuser) FLAG_FILEASUSER=1; shift;;
+            -h | --help) FLAG_HELP=1; shift ;;
+            -s | --squash) FLAG_SQUASH=1; shift ;;
+            -t) FLAG_TYPE=1; type_cmd="${CMD_TYPE}"; shift ;;
+            --type)
+                FLAG_TYPE=1
+                if [ -n "${2}" ]; then
+                    type_cmd="${2}"
+                    shift 2
+                else
+                    type_cmd="${CMD_TYPE}"
+                    shift
+                fi ;;
+            --) shift; break;;
+            *) break;;
+      esac
+    done
 
-if [ "${FLAG_HELP}" -eq 1 ]; then
-    _usage >&2
-    exit 0
-fi
+    if [ "${FLAG_HELP}" -eq 1 ]; then
+        usage >&2
+        exit 0
+    fi
 
-if [ "${FLAG_TYPE}" -eq 1 ] && [ "${FLAG_COPY}" -eq 1 ]; then
-    printf "copy and type cannot be used at same time. Please pass only one.\n"
-    exit 1
-elif [ "${FLAG_TYPE}" -eq 0 ] && [ "${FLAG_COPY}" -eq 0 ]; then
-    printf "neither -c/--copy or -t/--type passed. Defaulting to copying with wl-copy."
-    copy_cmd="${CMD_COPY}"
-fi
+    if [ "${FLAG_TYPE}" -eq 1 ] && [ "${FLAG_COPY}" -eq 1 ]; then
+        printf "copy and type cannot be used at same time. Please pass only one.\n"
+        exit 1
+    elif [ "${FLAG_TYPE}" -eq 0 ] && [ "${FLAG_COPY}" -eq 0 ]; then
+        printf "neither -c/--copy or -t/--type passed. Defaulting to copying with wl-copy."
+        copy_cmd="${CMD_COPY}"
+    fi
 
-cd "${PASSWORD_STORE_DIR:-${HOME}/.password-store}"
-password_files="$(find . -name "*.gpg" | sed "s/^\.\/\(.*\)\.gpg$/\1/")"
+    cd "${PASSWORD_STORE_DIR:-${HOME}/.password-store}"
+    password_files="$(find . -name "*.gpg" | sed "s/^\.\/\(.*\)\.gpg$/\1/")"
 
-password=$(printf '%s\n' "${password_files}" | wofi --dmenu)
-[ -n "${password}" ] || exit
+    password=$(printf '%s\n' "${password_files}" | wofi --dmenu)
+    [ -n "${password}" ] || exit
 
-if [ "${FLAG_FILEASUSER}" -eq 1 ]; then
-    passname=$(printf '%s' "${password}" | sed "s,.*/\(\),\1,")
-fi
-
-field_list="$(_parse_fields)"
-field_count="$(printf '%s' "${field_list}" | wc -l)"
-if [ "${FLAG_SQUASH}" -eq 1 ] && [ "${field_count}" -eq 0 ]; then
-    field="password"
-    FLAG_ONLYPASSWORD=1
-elif [ "${FLAG_AUTOTYPE}" -ne 1 ]; then
-    field=$(printf '%s\n' "${field_list}" | wofi --dmenu)
-fi
-
-# get the command to output to
-if [ "${FLAG_TYPE}" -eq 1 ]; then
-    output_cmd=${type_cmd}
-else
-    output_cmd=${copy_cmd}
-fi
-
-if [ "${FLAG_AUTOTYPE}" -eq 1 ] || [ "${field}" = "autotype" ]; then
     if [ "${FLAG_FILEASUSER}" -eq 1 ]; then
-        username="${passname}"
-    else
-        username=$(_pass_get "username")
-    fi
-    password=$(_pass_get "password")
-
-    # check if we are autotyping a password-only file
-    if [ "${FLAG_ONLYPASSWORD}" -eq 1 ]; then
-        printf '%s\n' "${password}" | ${output_cmd}
-    else
-        printf '%s\t%s\n' "${username}" "${password}" | ${output_cmd}
+        passname=$(printf '%s' "${password}" | sed "s,.*/\(\),\1,")
     fi
 
-else
-    _pass_get "${field}" | ${output_cmd}
-fi
+    field_list="$(parse_fields)"
+    field_count="$(printf '%s' "${field_list}" | wc -l)"
+    if [ "${FLAG_SQUASH}" -eq 1 ] && [ "${field_count}" -eq 0 ]; then
+        field="password"
+        FLAG_ONLYPASSWORD=1
+    elif [ "${FLAG_AUTOTYPE}" -ne 1 ]; then
+        field=$(printf '%s\n' "${field_list}" | wofi --dmenu)
+    fi
+
+    # get the command to output to
+    if [ "${FLAG_TYPE}" -eq 1 ]; then
+        output_cmd=${type_cmd}
+    else
+        output_cmd=${copy_cmd}
+    fi
+
+    if [ "${FLAG_AUTOTYPE}" -eq 1 ] || [ "${field}" = "autotype" ]; then
+        if [ "${FLAG_FILEASUSER}" -eq 1 ]; then
+            username="${passname}"
+        else
+            username=$(pass_get "username")
+        fi
+        password=$(pass_get "password")
+
+        # check if we are autotyping a password-only file
+        if [ "${FLAG_ONLYPASSWORD}" -eq 1 ]; then
+            printf '%s\n' "${password}" | ${output_cmd}
+        else
+            printf '%s\t%s\n' "${username}" "${password}" | ${output_cmd}
+        fi
+
+    else
+        pass_get "${field}" | ${output_cmd}
+    fi
+}
+
+main "${@}"
