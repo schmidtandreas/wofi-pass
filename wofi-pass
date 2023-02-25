@@ -140,7 +140,7 @@ function main() {
         printf "copy and type cannot be used at same time. Please pass only one.\n"
         exit 1
     elif [ "${FLAG_TYPE}" -eq 0 ] && [ "${FLAG_COPY}" -eq 0 ]; then
-        printf "neither -c/--copy or -t/--type passed. Defaulting to copying with wl-copy."
+        printf "neither -c/--copy or -t/--type passed. Defaulting to copying with wl-copy.\n"
         copy_cmd="${CMD_COPY}"
     fi
 
