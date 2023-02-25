@@ -15,6 +15,10 @@ FLAG_HELP=0
 CMD_COPY="wl-copy"
 CMD_TYPE="wtype -"
 
+function _wofi() {
+    wofi "$@"
+}
+
 function _trim() {
     local var="${*}"
     # remove leading whitespace characters
@@ -147,7 +151,7 @@ function main() {
     cd "${PASSWORD_STORE_DIR:-${HOME}/.password-store}"
     password_files="$(find . -name "*.gpg" | sed "s/^\.\/\(.*\)\.gpg$/\1/")"
 
-    password=$(printf '%s\n' "${password_files}" | wofi --dmenu)
+    password=$(printf '%s\n' "${password_files}" | _wofi --dmenu)
     [ -n "${password}" ] || exit
 
     if [ "${FLAG_FILEASUSER}" -eq 1 ]; then
