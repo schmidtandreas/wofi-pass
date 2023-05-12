@@ -1,0 +1,4 @@
+language: bash
+
+check-script:
+  shellcheck wofi-pass
