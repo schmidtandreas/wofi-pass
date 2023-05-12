@@ -1,3 +1,5 @@
+[![Build Status](https://app.travis-ci.com/schmidtandreas/wofi-pass.svg?branch=main)](https://app.travis-ci.com/schmidtandreas/wofi-pass)
+
 # wofi-pass
 ```
 Usage: wofi-pass [options]
