@@ -1,0 +1,36 @@
+wofi-pass(1) -- pass support for wofi
+===
+
+## OPTIONS
+
+* `-a`, `--autotype`:
+Autotype whatever entry is chosen
+
+* `-c`, `--copy` [<cmd>]:
+Copy to clipboard. Defaults to wl-copy if no cmd is given.
+
+* `-f`, `--fileisuser`:
+Use the name of the password file as username
+
+* `-h`, `--help`:
+Show the help message
+
+* `-s`, `--squash`:
+Don't show field choice if password file only contains password.
+
+* `-t`, `--type` [<cmd>]:
+Type the selection instead of copying to clipboard.
+Defaults to wtype if no cmd is given.
+This also enables the autotype choice which types `username :tab password`.
+
+## PASSWORD FILES
+
+`wofi-pass` assumes password files are formatted like the following:
+
+Th3Gr3at3stPassw0rd    
+username: JohnDoe    
+email: john@example.com    
+otpauth://totp/example?secret=ABCDCBABCDCBABCD    
+pin: 1234    
+
+Note that the password is **ALWAYS** on the first line.

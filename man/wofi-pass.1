@@ -1,0 +1,38 @@
+.\" generated with Ronn-NG/v0.9.1
+.\" http://github.com/apjanke/ronn-ng/tree/0.9.1
+.TH "WOFI\-PASS" "1" "May 2023" ""
+.SH "NAME"
+\fBwofi\-pass\fR \- pass support for wofi
+.SH "OPTIONS"
+.TP
+\fB\-a\fR, \fB\-\-autotype\fR
+Autotype whatever entry is chosen
+.TP
+\fB\-c\fR, \fB\-\-copy\fR [\fIcmd\fR]
+Copy to clipboard\. Defaults to wl\-copy if no cmd is given\.
+.TP
+\fB\-f\fR, \fB\-\-fileisuser\fR
+Use the name of the password file as username
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Show the help message
+.TP
+\fB\-s\fR, \fB\-\-squash\fR
+Don't show field choice if password file only contains password\.
+.TP
+\fB\-t\fR, \fB\-\-type\fR [\fIcmd\fR]
+Type the selection instead of copying to clipboard\. Defaults to wtype if no cmd is given\. This also enables the autotype choice which types \fBusername :tab password\fR\.
+.SH "PASSWORD FILES"
+\fBwofi\-pass\fR assumes password files are formatted like the following:
+.P
+Th3Gr3at3stPassw0rd
+.br
+username: JohnDoe
+.br
+email: john@example\.com
+.br
+otpauth://totp/example?secret=ABCDCBABCDCBABCD
+.br
+pin: 1234
+.P
+Note that the password is \fBALWAYS\fR on the first line\.
