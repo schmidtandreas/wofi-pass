@@ -15,6 +15,9 @@ FLAG_HELP=0
 CMD_COPY="wl-copy"
 CMD_TYPE="wtype -"
 
+# We expect to find these fields in pass(1)'s output
+USERNAME_field='username'
+
 function _wofi() {
     wofi "$@"
 }
@@ -35,16 +38,15 @@ function parse_fields() {
     local -r fields="$(pass show "${password}" | tail -n +2 | cut -d: -f1 -s)"
     local field_list="password
 "
-
     if [ "${FLAG_FILEASUSER}" -eq 1 ]; then
         has_username=1
-        line="username"
+        line="$USERNAME_field"
         field_list="${field_list}${line}
 "
     fi
 
     for line in ${fields}; do
-        if [ "${line}" = "username" ]; then
+        if [ "${line}" = "$USERNAME_field" ]; then
             has_username=1
             field_list="${field_list}${line}
 "
@@ -76,7 +78,7 @@ function pass_get() {
         pass show "${password}" | { IFS= read -r pass; printf %s "${pass}"; }
     elif [ "${1}" = "OTP" ]; then
         pass otp "${password}" | tail -n1 | { IFS= read -r pass; printf %s "${pass}"; }
-    elif [ "${FLAG_FILEASUSER}" -eq 1 ] && [ "${1}" = "username" ]; then
+    elif [ "${FLAG_FILEASUSER}" -eq 1 ] && [ "${1}" = "$USERNAME_field" ]; then
         printf %s "${passname}"
     else
         pass_field "${@}"
@@ -101,7 +103,26 @@ function usage() {
 EOF
 }
 
+get_config_file () {
+    [ ! "$XDG_CONFIG_HOME" ] && export XDG_CONFIG_HOME="$HOME/.config"
+    configs=("$XDG_CONFIG_HOME/wofi-pass/config"
+             "/etc/wofi-pass.conf")
+
+    # return the first config file with a valid path
+    for config in "${configs[@]}"; do
+        # '-n' is needed in case WOFI_PASS_CONFIG is not set
+        if [[ -n "${config}" && -f "${config}" ]]; then
+            printf "%s" "$config"
+            return
+        fi
+    done
+}
+
 function main() {
+    # load config file
+    config_file="$(get_config_file)"
+    [[ -n "$config_file" ]] && source "$config_file"
+
     OPTS="$(getopt --options ac::fhst:: --longoptions autotype,copy::,fileisuser,help,squash,type:: -n 'wofi-pass' -- "${@}")"
     eval set -- "${OPTS}"
     while true; do
@@ -178,7 +199,7 @@ function main() {
         if [ "${FLAG_FILEASUSER}" -eq 1 ]; then
             username="${passname}"
         else
-            username=$(pass_get "username")
+            username=$(pass_get "$USERNAME_field")
         fi
         password=$(pass_get "password")
 
