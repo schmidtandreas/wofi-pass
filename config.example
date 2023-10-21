@@ -1,0 +1,4 @@
+CMD_COPY="wl-copy"
+CMD_TYPE="wtype -"
+
+USERNAME_field="username"
