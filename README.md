@@ -44,6 +44,7 @@ to clipboard. This also enables the autotype choice which types
 ## Configuration
 
 wofi-pass can read its configuration values from various locations in the following order:
+* `WOFI_PASS_CONFIG` (environment variable)
 * `$XDG_CONFIG_HOME/wofi-pass/config`
 * `/etc/wofi-pass.conf`
 
