@@ -42,10 +42,13 @@ to clipboard. This also enables the autotype choice which types
 `username :tab password`.
 
 ## Configuration
-wofi-pass may read its configuration values from different locations in the following order:
-* `$XDG_CONFIG_HOME/wofi-pass/config` (defaulting to `$HOME/.config/wofi-pass/config`)
+
+wofi-pass can read its configuration values from various locations in the following order:
+* `$XDG_CONFIG_HOME/wofi-pass/config`
 * `/etc/wofi-pass.conf`
 
-wofi-pass only loads the first existing file. In case no config file exists, wofi-pass uses its internal default values.
+If `XDG_CONFIG_HOME` environment variable is not set, `${HOME}/.config` will be used.
 
-For an example configuration please take a look at the included `config.example` file.
+wofi-pass loads only the first existing file. If no configuration file exists, wofi-pass uses its internal defaults.
+
+An example configuration file can be found in the supplied `config.example` file.

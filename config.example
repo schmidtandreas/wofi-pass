@@ -1,4 +1,4 @@
 CMD_COPY="wl-copy"
 CMD_TYPE="wtype -"
 
-USERNAME_field="username"
+PASS_FIELD_USERNAME="username"
