@@ -16,7 +16,7 @@ CMD_COPY="wl-copy"
 CMD_TYPE="wtype -"
 
 # We expect to find these fields in pass(1)'s output
-USERNAME_field='username'
+PASS_FIELD_USERNAME='username'
 
 function _wofi() {
     wofi "$@"
@@ -40,13 +40,13 @@ function parse_fields() {
 "
     if [ "${FLAG_FILEASUSER}" -eq 1 ]; then
         has_username=1
-        line="$USERNAME_field"
+        line="${PASS_FIELD_USERNAME}"
         field_list="${field_list}${line}
 "
     fi
 
     for line in ${fields}; do
-        if [ "${line}" = "$USERNAME_field" ]; then
+        if [ "${line}" = "${PASS_FIELD_USERNAME}" ]; then
             has_username=1
             field_list="${field_list}${line}
 "
@@ -78,7 +78,7 @@ function pass_get() {
         pass show "${password}" | { IFS= read -r pass; printf %s "${pass}"; }
     elif [ "${1}" = "OTP" ]; then
         pass otp "${password}" | tail -n1 | { IFS= read -r pass; printf %s "${pass}"; }
-    elif [ "${FLAG_FILEASUSER}" -eq 1 ] && [ "${1}" = "$USERNAME_field" ]; then
+    elif [ "${FLAG_FILEASUSER}" -eq 1 ] && [ "${1}" = "${PASS_FIELD_USERNAME}" ]; then
         printf %s "${passname}"
     else
         pass_field "${@}"
@@ -104,24 +104,28 @@ EOF
 }
 
 get_config_file () {
-    [ ! "$XDG_CONFIG_HOME" ] && export XDG_CONFIG_HOME="$HOME/.config"
-    configs=("$XDG_CONFIG_HOME/wofi-pass/config"
-             "/etc/wofi-pass.conf")
+    local config_base_dir="${XDG_CONFIG_HOME:-"${HOME}/.config"}"
+    readonly config_base_dir
+
+    config_files=("${config_base_dir}/wofi-pass/config"
+                  "/etc/wofi-pass.conf")
 
     # return the first config file with a valid path
-    for config in "${configs[@]}"; do
-        # '-n' is needed in case WOFI_PASS_CONFIG is not set
-        if [[ -n "${config}" && -f "${config}" ]]; then
-            printf "%s" "$config"
+    for config in "${config_files[@]}"; do
+        if [[ -f "${config}" ]]; then
+            printf "%s" "${config}"
             return
         fi
     done
 }
 
-function main() {
-    # load config file
+load_config_file () {
     config_file="$(get_config_file)"
-    [[ -n "$config_file" ]] && source "$config_file"
+    [[ -n "${config_file}" ]] && source "${config_file}"
+}
+
+function main() {
+    load_config_file
 
     OPTS="$(getopt --options ac::fhst:: --longoptions autotype,copy::,fileisuser,help,squash,type:: -n 'wofi-pass' -- "${@}")"
     eval set -- "${OPTS}"
@@ -199,7 +203,7 @@ function main() {
         if [ "${FLAG_FILEASUSER}" -eq 1 ]; then
             username="${passname}"
         else
-            username=$(pass_get "$USERNAME_field")
+            username=$(pass_get "${PASS_FIELD_USERNAME}")
         fi
         password=$(pass_get "password")
 
