@@ -107,12 +107,13 @@ get_config_file () {
     local config_base_dir="${XDG_CONFIG_HOME:-"${HOME}/.config"}"
     readonly config_base_dir
 
-    config_files=("${config_base_dir}/wofi-pass/config"
+    config_files=("${WOFI_PASS_CONFIG:-""}"
+                  "${config_base_dir}/wofi-pass/config"
                   "/etc/wofi-pass.conf")
 
     # return the first config file with a valid path
     for config in "${config_files[@]}"; do
-        if [[ -f "${config}" ]]; then
+        if [[ -n "${config}" && -f "${config}" ]]; then
             printf "%s" "${config}"
             return
         fi
