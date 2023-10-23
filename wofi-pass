@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VERSION="23.1.0"
+VERSION="23.1.1"
 
 set -eu
 
