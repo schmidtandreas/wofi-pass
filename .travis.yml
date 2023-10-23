@@ -1,4 +1,14 @@
-language: bash
+language: shell
+os: linux
+dist: focal
 
-check-script:
-  shellcheck wofi-pass
+addons:
+  apt:
+    update: true
+    packages:
+      - shellcheck
+
+install: skip
+
+script:
+  shellcheck -x wofi-pass
