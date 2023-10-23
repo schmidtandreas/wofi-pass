@@ -52,4 +52,4 @@ If `XDG_CONFIG_HOME` environment variable is not set, `${HOME}/.config` will be 
 
 wofi-pass loads only the first existing file. If no configuration file exists, wofi-pass uses its internal defaults.
 
-An example configuration file can be found in the supplied `config.example` file.
+An example configuration file can be found in the supplied `wofi-pass.conf` file.
