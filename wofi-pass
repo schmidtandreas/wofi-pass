@@ -201,11 +201,7 @@ function main() {
     fi
 
     if [ "${FLAG_AUTOTYPE}" -eq 1 ] || [ "${field}" = "autotype" ]; then
-        if [ "${FLAG_FILEASUSER}" -eq 1 ]; then
-            username="${passname}"
-        else
-            username=$(pass_get "${PASS_FIELD_USERNAME}")
-        fi
+        username=$(pass_get "${PASS_FIELD_USERNAME}")
         password=$(pass_get "password")
 
         # check if we are autotyping a password-only file
