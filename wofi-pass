@@ -122,7 +122,10 @@ get_config_file () {
 
 load_config_file () {
     config_file="$(get_config_file)"
-    [[ -n "${config_file}" ]] && source "${config_file}"
+    if [[ -n "${config_file}" ]]; then
+        #shellcheck source=wofi-pass.conf
+        source "${config_file}"
+    fi
 }
 
 function main() {
