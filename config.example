@@ -1,4 +1,23 @@
-CMD_COPY="wl-copy"
-CMD_TYPE="wtype -"
+# wofi-pass configuration file
 
-PASS_FIELD_USERNAME="username"
+# This file is sourced by wofi-pass and can override the
+# override the default values for global variables from wofi-pass.
+# All variables that can be changed are listed below.
+# The listed variables are commented out, because
+# the value is set to defalut and thus does not need to be changed.
+#
+# If you change other variables that are used by wofi-pass,
+# you do so at your own risk.
+
+## COMMANDS
+
+# command for put the output to clipboard
+#CMD_COPY="wl-copy"
+
+# command for type out the output
+#CMD_TYPE="wtype -"
+
+## PASS FIELDS
+
+# field for username used for autotype functionality
+#PASS_FIELD_USERNAME="username"
