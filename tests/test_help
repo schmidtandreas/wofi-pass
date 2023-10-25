@@ -1,0 +1,19 @@
+test_exit_help_flag_set() {
+    fake usage echo "USAGE"
+    FLAG_HELP=1
+    coproc cat
+    exec {test_channel}>&${COPROC[1]}
+    assert_status_code 0 "exit_if_help_flag_set 2>&${test_channel}" "exit help: exit code is not 0"
+    assert_matches "USAGE" "$(head -n 1 <&${COPROC[0]})"
+}
+
+test_exit_help_flag_not_set() {
+    fake usage echo "USAGE"
+    FLAG_HELP=0
+    assert_fail "exit_if_help_flag_set 2>&1 | grep \"USAGE\" " "exit help: exit code is not 0"
+}
+
+setup_suite() {
+    WOFI_PASS_TESTING="1"
+    source ../wofi-pass
+}
