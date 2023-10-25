@@ -1,0 +1,73 @@
+TEST_CONFIG_FILE="./test.conf"
+USER_CFG_FILE="${XDG_CONFIG_HOME:-"${HOME}/.config"}/wofi-pass/config"
+GLOBAL_CFG_FILE="/etc/wofi-pass.conf" 
+
+test_config_load_empty(){
+    local debug_output=""
+    fake get_config_file echo ""
+
+    debug_output="$(coproc cat
+    exec {test_channel}>&${COPROC[1]}
+    exec 2>&${test_channel}
+    set -x
+    load_config_file 2>&${test_channel}
+    set +x
+
+    local line=""
+    while IFS= read -t 0.5 -r line || [[ -n "${line}" ]]; do
+        printf "|%s|\n" "${line}"
+    done <&${COPROC[0]})"
+
+    assert_matches ".*FAKE_PARAMS.*" "${debug_output}" "config load: mock get_config_file not executed"
+    assert_matches "\|.*[+]+[ ]*config_file=\|.*" "${debug_output}" "config load: config_file variable not empty as expected"
+    assert_fail ".*source.*" "${debug_output}" "config load: load with empty config file path failed"
+}
+
+test_config_load_test_conf() {
+    fake get_config_file echo "${TEST_CONFIG_FILE}"
+
+    TEST_VAR1=""
+    load_config_file
+
+    assert_equals "changed" "${TEST_VAR1}" "config load: sourcing of "${TEST_CONFIG_FILE}" failed"
+}
+
+test_config_get_user_config_file() {
+    assert "[ ! -f \"${USER_CFG_FILE}\" ]" "config: test environment contains ${USER_CFG_FILE}"
+
+    mkdir -p "$(dirname "${USER_CFG_FILE}")"
+    touch "${USER_CFG_FILE}"
+
+    WOFI_PASS_CONFIG=""
+    cfg_file="$(get_config_file)"
+
+    rm -rf "$(dirname "${USER_CFG_FILE}")"
+
+    assert_equals "${USER_CFG_FILE}" "${cfg_file}" "config get file: get user config file failed"
+
+}
+
+test_config_get_custom_config_file() {
+    WOFI_PASS_CONFIG="${TEST_CONFIG_FILE}"
+    cfg_file="$(get_config_file)"
+
+    assert_equals "${TEST_CONFIG_FILE}" "${cfg_file}" "config get file: get custom config file failed"
+}
+
+test_config_get_global_config_file() {
+    assert "[ ! -f \"${GLOBAL_CFG_FILE}\" ]" "config: test environment contains ${GLOBAL_CFG_FILE}"
+
+    sudo touch "${GLOBAL_CFG_FILE}"
+
+    WOFI_PASS_CONFIG=""
+    cfg_file="$(get_config_file)"
+
+    sudo rm -rf "${GLOBAL_CFG_FILE}"
+
+    assert_equals "${GLOBAL_CFG_FILE}" "${cfg_file}" "config get file: get global config file failed"
+}
+
+setup_suite() {
+    WOFI_PASS_TESTING="1"
+    source ../wofi-pass
+}
