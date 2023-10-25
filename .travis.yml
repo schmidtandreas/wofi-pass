@@ -1,6 +1,8 @@
 language: shell
 os: linux
 dist: focal
+git:
+  depth: 3
 
 addons:
   apt:
@@ -11,4 +13,5 @@ addons:
 install: skip
 
 script:
-  shellcheck -x wofi-pass
+  - shellcheck -x wofi-pass
+  - ./bash_unit/bash_unit -f tap ./tests/test_*
