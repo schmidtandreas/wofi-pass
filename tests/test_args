@@ -1,0 +1,80 @@
+argument_testing() {
+    local -r short_arg="${1}"
+    local -r long_arg="${2}"
+    local -r flag_name="${3}"
+    local -r cmd_arg="${4:-""}"
+
+    flags=("FLAG_AUTOTYPE" "FLAG_COPY" "FLAG_FILEISUSER" "FLAG_HELP" "FLAG_SQUASH" "FLAG_TYPE")
+
+    for flag in "${flags[@]}"; do
+        declare "${flag}"=0
+    done
+    CMD_COPY="wl-copy"
+    CMD_TYPE="wtype -"
+    EXPECTED_CMD_COPY="${CMD_COPY}"
+    EXPECTED_CMD_TYPE="${CMD_TYPE}"
+    [[ "${flag_name}" == "FLAG_COPY" ]] && EXPECTED_CMD_COPY="${cmd_arg:-"wl-copy"}"
+    [[ "${flag_name}" == "FLAG_TYPE" ]] && EXPECTED_CMD_TYPE="${cmd_arg:-"wtype -"}"
+
+    
+    parse_arguments "-${short_arg}${cmd_arg}"
+    assert_equals 1 ${!flag_name} "args: ${flag_name} was not set"
+
+    declare "${flag_name}"=0
+    arg="${long_arg}"
+    [ -n "${cmd_arg}" ] && arg="${long_arg}=${cmd_arg}"
+    parse_arguments "--${arg}"
+    assert_equals 1 ${!flag_name} "args: ${flag_name} was not set"
+
+
+    for flag in "${flags[@]}"; do
+        value=0
+        if [[ "${flag_name}" == "${flag}" ]]; then
+            value=1
+        fi
+        assert_equals ${value} ${!flag} "args: ${flag} is not ${value}"
+
+    done
+    assert_equals "${EXPECTED_CMD_COPY}" "${CMD_COPY}" "args: CMD_COPY is not \"${EXPECTED_CMD_COPY}\""
+    assert_equals "${EXPECTED_CMD_TYPE}" "${CMD_TYPE}" "args: CMD_TYPE is not \"${EXPECTED_CMD_TYPE}\""
+}
+
+test_args_autotype() {
+    argument_testing "a" "autotype" "FLAG_AUTOTYPE"
+}
+
+test_args_copy() {
+    argument_testing "c" "copy" "FLAG_COPY"
+    argument_testing "c" "copy" "FLAG_COPY" "new-copy-cmd"
+}
+
+test_args_fileisuser() {
+    argument_testing "f" "fileisuser" "FLAG_FILEISUSER"
+}
+
+test_args_help() {
+    argument_testing "h" "help" "FLAG_HELP"
+}
+
+test_args_squash() {
+    argument_testing "s" "squash" "FLAG_SQUASH"
+}
+
+test_args_type() {
+    argument_testing "t" "type" "FLAG_TYPE"
+    argument_testing "t" "type" "FLAG_TYPE" "new-type-cmd"
+}
+
+test_args_unknown() {
+    error_out="$(parse_arguments --not-exist 2>&1)"
+    assert_matches ".*unrecognized option.*" "${error_out}" "args: parsed not defined parameter"
+    error_out="$(parse_arguments -f --type --not-exist 2>&1)"
+    assert_matches ".*unrecognized option.*" "${error_out}" "args: parsed not defined parameter"
+    error_out="$(parse_arguments -a --not-exist -t 2>&1)"
+    assert_matches ".*unrecognized option.*" "${error_out}" "args: parsed not defined parameter"
+}
+
+setup_suite() {
+    WOFI_PASS_TESTING="1"
+    source ../wofi-pass
+}
