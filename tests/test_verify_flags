@@ -1,0 +1,43 @@
+test_flags_type_and_copy() {
+    FLAG_TYPE=1
+    FLAG_COPY=1
+
+    assert_fail verify_flags "verify flags: type and copy set at same time"
+}
+
+test_flags_no_type_nor_copy() {
+    FLAG_COPY=0
+    FLAG_TYPE=0
+
+    output="$(verify_flags 2>/dev/null)"
+    warning="$(verify_flags 2>&1)"
+
+    assert_matches "" "${output}" "verify flags: output not empty"
+    assert_matches "neither.*passed. Defaulting to copying with ${CMD_COPY}." "${warning}" "verify flags: no type nor copy warning not found"
+    assert verify_flags "verify flags: verify_flags return error"
+}
+
+test_flags_type_no_copy() {
+    FLAG_COPY=1
+    FLAG_TYPE=0
+
+    output="$(verify_flags 2>&1)"
+
+    assert_matches "" "${output}" "verify flags: output not empty"
+    assert verify_flags "verify flags: verify_flags return error"
+}
+
+test_flags_no_type_copy() {
+    FLAG_COPY=0
+    FLAG_TYPE=1
+
+    output="$(verify_flags 2>&1)"
+
+    assert_matches "" "${output}" "verify flags: output not empty"
+    assert verify_flags "verify flags: verify_flags return error"
+}
+
+setup_suite() {
+        WOFI_PASS_TESTING="1"
+            source ../wofi-pass
+}
