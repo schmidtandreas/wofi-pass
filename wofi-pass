@@ -164,10 +164,10 @@ function exit_if_help_flag_set() {
 
 function verify_flags() {
     if [ ${FLAG_TYPE} -eq 1 ] && [ ${FLAG_COPY} -eq 1 ]; then
-        printf "copy and type cannot be used at same time. Please pass only one.\n"
+        printf "copy and type cannot be used at same time. Please pass only one.\n" >&2
         exit 1
     elif [ ${FLAG_TYPE} -eq 0 ] && [ ${FLAG_COPY} -eq 0 ]; then
-        printf "neither -c/--copy or -t/--type passed. Defaulting to copying with wl-copy.\n"
+        printf "neither -c/--copy or -t/--type passed. Defaulting to copying with %s.\n" "${CMD_COPY}" >&2
     fi
 }
 
