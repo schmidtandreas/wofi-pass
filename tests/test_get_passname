@@ -1,0 +1,46 @@
+fake_wofi() {
+    local input=()
+    while read -r line; do
+        input+=("${line}")
+    done
+    echo "${input[${1}]}"
+}
+
+fake_find() {
+    local -r default_password_storage_dir="${1}"
+    shift
+    for item in "${@}"; do
+        printf "%s\\n" "${default_password_storage_dir}/${item}.gpg"
+    done
+}
+
+test_passname_selection() {
+    local -r select_item=1
+    local -r items=("item0" "item1" "item2")
+    fake find fake_find "${HOME}/.password-store" "${items[@]}"
+    fake _wofi fake_wofi ${select_item}
+    local output="$(get_passname_from_menu)"
+    assert_equals "${items[${select_item}]}" "${output}" "passname: not find valid item"
+}
+
+test_passname_empty_input() {
+    fake find echo ""
+    fake _wofi echo ""
+    local output="$(get_passname_from_menu)"
+    assert_equals "" "${output}" "passname: no input but output"
+}
+
+test_passname_change_pass_store_dir() {
+    PASSWORD_STORE_DIR="/new-password-store"
+    local -r select_item=2
+    local -r items=("item0" "item1" "item2")
+    fake find fake_find "${PASSWORD_STORE_DIR}" "${items[@]}"
+    fake _wofi fake_wofi ${select_item}
+    local output="$(get_passname_from_menu)"
+    assert_equals "${items[${select_item}]}" "${output}" "passname: not find valid item"
+}
+
+setup_suite() {
+    WOFI_PASS_TESTING="1"
+    source ../wofi-pass
+}
