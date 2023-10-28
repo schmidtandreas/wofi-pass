@@ -38,7 +38,7 @@ function _trim() {
 function parse_fields() {
     local field_list
     local has_username=0
-    local -r passname="${2}"
+    local -r passname="${1}"
     mapfile -t fields < <(_pass show "${passname}" | tail -n +2 | cut -d: -f1 -s)
     local line=""
 
@@ -184,7 +184,7 @@ function get_field_from_menu() {
     local field
     local field_count
     local -r passname="${1}"
-    mapfile -t field_list < <(parse_fields field_list "${passname}")
+    mapfile -t field_list < <(parse_fields "${passname}")
     field_count=${#field_list[@]}
     readonly field_list
     readonly field_count
