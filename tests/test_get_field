@@ -1,0 +1,62 @@
+test_get_field_password_only() {
+    fake parse_fields echo "password"
+    fake _wofi  echo "password"
+    local output="$(get_field_from_menu "passname")"
+
+    assert_equals 0 ${?} "get field: execution failed"
+    assert_equals "password" "${output}" "get field: expected output not matched"
+
+    FLAG_SQUASH=1
+    output="$(get_field_from_menu "passname")"
+
+    assert_equals 0 ${?} "get field: execution failed"
+    assert_equals "password" "${output}" "get field: squashed: expected output not matched"
+
+    FLAG_SQUASH=0
+    FLAG_AUTOTYPE=1
+    output="$(get_field_from_menu "passname")"
+
+    assert_equals 0 ${?} "get field: execution failed"
+    assert_equals "" "${output}" "get field: autotype: output is not empty"
+}
+
+fake_parse_fields() {
+    for field in "${@}"; do
+        printf "%s\\n" "${field}"
+    done
+}
+
+fake_wofi() {
+    local input=()
+    while read -r line; do
+        input+=("${line}")
+    done
+    echo "${input[${1}]}"
+}
+
+test_get_field_mulitfields() {
+    local select_field=1
+    local -r fields=("password" "username" "url")
+    fake parse_fields fake_parse_fields "${fields[@]}"
+    fake _wofi fake_wofi ${select_field}
+    local output="$(get_field_from_menu "passname")"
+    assert_equals "${fields[${select_field}]}" "${output}" "get field: unexpected output"
+
+    select_field=2
+    fake _wofi fake_wofi ${select_field}
+    output="$(get_field_from_menu "passname")"
+    assert_equals "${fields[${select_field}]}" "${output}" "get field: unexpected output"
+
+    FLAG_SQUASH=1
+    output="$(get_field_from_menu "passname")"
+    assert_equals "${fields[${select_field}]}" "${output}" "get field: squashed: unexpected output"
+
+    FLAG_AUTOTYPE=1
+    output="$(get_field_from_menu "passname")"
+    assert_equals "" "${output}" "get field: autotype: output not empty"
+}
+
+setup_suite() {
+    WOFI_PASS_TESTING="1"
+    source ../wofi-pass
+}
