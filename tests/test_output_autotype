@@ -1,0 +1,14 @@
+fake_cmd_output() {
+    read -t 0.2 input
+    printf "%s" "${input[0]}"
+}
+
+test_output_autotype() {
+	local output="$(output_autotype "user@e-mail.com" "paSSw0rd" "fake_cmd_output")"
+	assert_equals "user@e-mail.com	paSSw0rd" "${output}" "output autotype: unexpected output"
+}
+
+setup_suite() {
+	WOFI_PASS_TESTING=1
+	source ../wofi-pass
+}
