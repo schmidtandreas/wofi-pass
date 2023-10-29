@@ -1,0 +1,60 @@
+fake_cmd_output() {
+    read -t 0.2 input
+    printf "%s" "${input[0]}"
+}
+
+fake_pass_get() {
+    local field="${FAKE_PARAMS[1]}"
+    declare -A values
+
+    assert_equals "passname" "${FAKE_PARAMS[0]}" "output field: passname not matched"
+
+    values[password]="paSSw0rd"
+    values[username]="user@e-mail.com"
+	values[user]="other@user-name.com"
+    values[url]="https://example.com"
+    values[OTP]="12345678"
+    printf "%s" "${values[${field}]}"
+}
+
+test_output_field_single_selection() {
+    fake get_output_cmd echo "fake_cmd_output"
+    fake pass_get fake_pass_get
+
+    local output="$(output_field "passname" "password")"
+    assert_equals "paSSw0rd" "${output}" "output field: field password not matched"
+
+    output="$(output_field "passname" "username")"
+    assert_equals "user@e-mail.com" "${output}" "output field: field username not matched"
+
+    output="$(output_field "passname" "url")"
+    assert_equals "https://example.com" "${output}" "output field: field url not matched"
+
+    output="$(output_field "passname" "OTP")"
+    assert_equals "12345678" "${output}" "output field: field OTP not matched"
+}
+
+test_output_field_autotype() {
+    fake get_output_cmd echo "fake_cmd_output"
+    fake pass_get fake_pass_get
+
+    local output="$(output_field "passname" "autotype")"
+    assert_equals "user@e-mail.com	paSSw0rd" "${output}" "output field: unexpected output for autotype"
+
+	FLAG_AUTOTYPE=1
+	output="$(output_field "passname" "")"
+    assert_equals "user@e-mail.com	paSSw0rd" "${output}" "output field: unexpected output for autotype"
+
+	PASS_FIELD_USERNAME="user"
+	output="$(output_field "passname" "user")"
+    assert_equals "other@user-name.com	paSSw0rd" "${output}" "output field: unexpected output for autotype"
+
+	FLAG_ONLYPASSWORD=1
+	output="$(output_field "passname" "user")"
+    assert_equals "paSSw0rd" "${output}" "output field: unexpected output for autotype"
+}
+
+setup_suite() {
+    WOFI_PASS_TESTING=1
+    source ../wofi-pass
+}
