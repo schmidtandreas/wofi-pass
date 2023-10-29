@@ -1,0 +1,72 @@
+fake_pass() {
+	local -r cmd="${FAKE_PARAMS[0]}"
+	local -r passname="${FAKE_PARAMS[1]}"
+	local output=("paSSw0rd" "username: user@e-mail.com")
+
+	[ "${passname}" != "/dir/dir1/passname" ] && return
+	
+	if [ "${cmd}" = "show" ]; then
+		printf "%s\n" "${output[@]}"
+	elif [ "${cmd}" = "otp" ]; then
+		printf "12345678"
+	fi
+}
+
+test_pass_get_password() {
+	fake _pass fake_pass
+
+	local output="$(pass_get "/dir/dir1/passname" "password")"
+	assert_equals "paSSw0rd" "${output}" "pass get: unexpected password"
+}
+
+test_pass_get_otp() {
+	fake _pass fake_pass
+
+	local output="$(pass_get "/dir/dir1/passname" "OTP")"
+	assert_equals "12345678" "${output}" "pass get: unexpected otp"
+}
+
+test_pass_get_fileisuser() {
+	fake _pass fake_pass
+	fake pass_field echo "user@e-mail.com"
+
+	local output="$(pass_get "/dir/dir1/passname" "${PASS_FIELD_USERNAME}")"
+	assert_equals "user@e-mail.com" "${output}" "pass get: unexpected output"
+
+	FLAG_FILEISUSER=1
+	output="$(pass_get "/dir/dir1/passname" "${PASS_FIELD_USERNAME}")"
+	assert_equals "passname" "${output}" "pass get: unexpected passname"
+
+	fake pass_field echo "https://example.com"
+	output="$(pass_get "/dir/dir1/passname" "url")"
+	assert_equals "https://example.com" "${output}" "pass get: unexpected output"
+}
+
+fake_pass_field() {
+	local -r passname="${FAKE_PARAMS[0]}"
+	local -r field="${FAKE_PARAMS[1]}"
+	declare -A outputs
+
+	[ "${passname}" != "/dir/dir1/passname" ] && return
+
+	outputs[username]="user@e-mail.com"
+	outputs[url]="https://example.com"
+
+	printf "%s" "${outputs[${field}]}"
+}
+
+test_pass_get_other_fields() {
+	fake _pass fake_pass
+	fake pass_field fake_pass_field
+
+	local output="$(pass_get "/dir/dir1/passname" "${PASS_FIELD_USERNAME}")"
+	assert_equals "user@e-mail.com" "${output}" "pass get: unexpected output"
+
+	output="$(pass_get "/dir/dir1/passname" "url")"
+	assert_equals "https://example.com" "${output}" "pass get: unexpected output"
+}
+
+setup_suite() {
+	WOFI_PASS_TESTING=1
+	source ../wofi-pass
+}
