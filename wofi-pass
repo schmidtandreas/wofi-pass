@@ -231,8 +231,8 @@ function output_field() {
     if [ ${FLAG_AUTOTYPE} -eq 1 ] || [ "${field}" = "autotype" ]; then
         local username
         local password
-        username=$(pass_get "${passname}" "${PASS_FIELD_USERNAME}")
-        password=$(pass_get "${passname}" "password")
+        username="$(pass_get "${passname}" "${PASS_FIELD_USERNAME}")"
+        password="$(pass_get "${passname}" "password")"
 
         # check if we are autotyping a password-only file
         if [ ${FLAG_ONLYPASSWORD} -eq 1 ]; then
@@ -240,7 +240,6 @@ function output_field() {
         else
             output_autotype "${username}" "${password}" "${cmd_output}"
         fi
-
     else
         pass_get "${passname}" "${field}" | ${cmd_output}
     fi
