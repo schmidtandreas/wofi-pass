@@ -1,0 +1,13 @@
+test_get_output_cmd() {
+	local output="$(get_output_cmd)"
+	assert_equals "${CMD_COPY}" "${output}" "output cmd: command is not \"${CMD_COPY}\""
+
+	FLAG_TYPE=1
+	output="$(get_output_cmd)"
+	assert_equals "${CMD_TYPE}" "${output}" "output cmd: command is not \"${CMD_TYPE}\""
+}
+
+setup_suite() {
+	WOFI_PASS_TESTING=1
+	source ../wofi-pass
+}
