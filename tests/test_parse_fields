@@ -1,0 +1,118 @@
+verify_parsed_fields() {
+    local output_array=()
+    local exected_autotype="${1}"
+    shift
+
+    coproc cat
+    exec {test_channel}>&${COPROC[1]}
+    parse_fields "passname" >&${test_channel}
+
+    while IFS= read -t 0.2 -r line || [[ -n "${line}" ]]; do
+        output_array+=("${line}")
+    done <&${COPROC[0]}
+    kill ${COPROC_PID}
+
+    local expected="$(printf "%s\n" "${@}")"
+    local output="$(printf "%s\n" "${output_array[@]}")"
+    assert_equals "${expected}" "${output}" "parse fields: unexpected output"
+    assert_equals ${expected_autotype} ${FLAG_AUTOTYPE} "parse fields: FLAG_AUTOTYPE has unexpected value"
+}
+
+test_parse_fields_empty_password() {
+    fake _pass echo ""
+
+    FLAG_AUTOTYPE=0
+    local expected_autotype=0
+    local expected_array=("password")
+
+    verify_parsed_fields ${expected_autotype} "${expected_array[@]}"
+    FLAG_FILEISUSER=1
+    expected_array=("password" "${PASS_FIELD_USERNAME}")
+    verify_parsed_fields ${expected_autotype} "${expected_array[@]}"
+}
+
+test_parse_fields_only_password() {
+    fake _pass echo "paSSw0rd"
+
+    FLAG_AUTOTYPE=0
+    local expected_autotype=0
+    local expected_array=("password")
+
+    verify_parsed_fields ${expected_autotype} "${expected_array[@]}"
+    FLAG_FILEISUSER=1
+    expected_array=("password" "${PASS_FIELD_USERNAME}")
+    verify_parsed_fields ${expected_autotype} "${expected_array[@]}"
+}
+
+
+test_parse_fields_username_password() {
+    fake _pass <<EOF
+paSSw0rd
+${PASS_FIELD_USERNAME}: username@e-mail.com
+EOF
+
+    FLAG_AUTOTYPE=0
+    local expected_autotype=0
+    local expected_array=("password" "${PASS_FIELD_USERNAME}")
+
+    verify_parsed_fields ${expected_autotype} "${expected_array[@]}"
+    FLAG_FILEISUSER=1
+    verify_parsed_fields ${expected_autotype} "${expected_array[@]}"
+}
+
+test_parse_fields_otp() {
+    fake _pass <<EOF
+paSSw0rd
+${PASS_FIELD_USERNAME}: username@e-mail.com
+otpauth://totp/XYZ:email@example.com?secret=ADFASDGASDF&issuer=XYZ
+EOF
+
+    FLAG_AUTOTYPE=0
+    local expected_autotype=0
+    local expected_array=("password" "${PASS_FIELD_USERNAME}" "OTP")
+
+    verify_parsed_fields ${expected_autotype} "${expected_array[@]}"
+    FLAG_FILEISUSER=1
+    verify_parsed_fields ${expected_autotype} "${expected_array[@]}"
+}
+
+test_parse_fields_autotype() {
+    fake _pass <<EOF
+paSSw0rd
+${PASS_FIELD_USERNAME}: username@e-mail.com
+autotype_always
+EOF
+
+    FLAG_AUTOTYPE=0
+    local expected_autotype=1
+    local expected_array=("password" "${PASS_FIELD_USERNAME}")
+    verify_parsed_fields ${expected_autotype} "${expected_array[@]}"
+
+    FLAG_FILEISUSER=1
+    FLAG_AUTOTYPE=0
+    verify_parsed_fields ${expected_autotype} "${expected_array[@]}"
+}
+
+test_parse_fields_ignore() {
+    fake _pass <<EOF
+paSSw0rd
+${PASS_FIELD_USERNAME}: username@e-mail.com
+ignore this line
+url: http://example.com
+ignore this line either
+this line: is expected
+EOF
+
+    FLAG_AUTOTYPE=0
+    local expected_autotype=0
+    local expected_array=("password" "${PASS_FIELD_USERNAME}" "url" "this line")
+    verify_parsed_fields ${expected_autotype} "${expected_array[@]}"
+
+    FLAG_FILEISUSER=1
+    verify_parsed_fields ${expected_autotype} "${expected_array[@]}"
+}
+
+setup_suite() {
+    WOFI_PASS_TESTING=1
+    source ../wofi-pass
+}
