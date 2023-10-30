@@ -1,0 +1,36 @@
+fake_pass() {
+	local -r cmd="${FAKE_PARAMS[0]}"
+	local -r passname="${FAKE_PARAMS[1]}"
+	local outputs=("paSSw0rd")
+	outputs+=("${PASS_FIELD_USERNAME}: user@e-mail.com")
+	outputs+=("url:     https://example.com")
+	outputs+=("pin:   this is the pin")
+	outputs+=("special  item:  value of special item	   ")
+
+	[ "${passname}" != "/dir/passname" ] && return
+
+	if [ "${cmd}" = "show" ]; then
+		printf "%s\n" "${outputs[@]}"
+	fi
+}
+
+test_pass_field() {
+	fake _pass fake_pass
+
+	local output="$(pass_field "/dir/passname" "${PASS_FIELD_USERNAME}")"
+	assert_equals "user@e-mail.com" "${output}" "pass field: unexpected output for username"
+
+	output="$(pass_field "/dir/passname" "url")"
+	assert_equals "https://example.com" "${output}" "pass field: unexpected output for username"
+
+	output="$(pass_field "/dir/passname" "pin")"
+	assert_equals "this is the pin" "${output}" "pass field: unexpected output for username"
+
+	output="$(pass_field "/dir/passname" "special  item")"
+	assert_equals "value of special item" "${output}" "pass field: unexpected output for username"
+}
+
+setup_suite() {
+	WOFI_PASS_TESTING=1
+	source ../wofi-pass
+}
