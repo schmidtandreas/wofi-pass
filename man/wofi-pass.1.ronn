@@ -46,6 +46,11 @@ it is replaced by the default value `${HOME}/.config`.
 
 The following varialbes can be redefined in configuration file.
 
+### COMMON
+
+* `PASSWORD_STORE_DIR` :
+Path to the pass storage files. Default: `${HOME}/.password-store`
+
 ### COMMANDS
 
 * `CMD_COPY` :
