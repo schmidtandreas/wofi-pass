@@ -3,9 +3,89 @@ fake_cmd_output() {
     printf "%s" "${input[0]}"
 }
 
-test_output_autotype() {
-	local output="$(output_autotype "user@e-mail.com" "paSSw0rd" "fake_cmd_output")"
+fake_pass_get() {
+    local -r passname="${FAKE_PARAMS[0]}"
+    local field="${FAKE_PARAMS[1]}"
+    declare -A values
+
+    [ "${passname}" = "/dir/dir1/passname" ] || return
+
+    values[password]="paSSw0rd"
+    values[username]="user@e-mail.com"
+	values[user]="other@user-name.com"
+    values[url]="https://example.com"
+    values[autotype]=""
+    printf "%s" "${values[${field}]}"
+}
+
+fake_press_key() {
+    local -r key="${FAKE_PARAMS[0]}"
+    printf "<%s>" "${key}"
+}
+
+fake_generate_otp() {
+    local -r passname="${FAKE_PARAMS[0]}"
+
+    [ "${passname}" = "/dir/dir1/passname" ] || return
+
+    printf "12345678"
+}
+
+test_output_autotype_default() {
+    fake pass_get fake_pass_get
+    fake press_key fake_press_key
+    fake generate_otp fake_generate_otp
+
+	local output="$(output_autotype "/dir/dir1/passname" "fake_cmd_output")"
 	assert_equals "user@e-mail.com	paSSw0rd" "${output}" "output autotype: unexpected output"
+
+    FLAG_TYPE=1
+	output="$(output_autotype "/dir/dir1/passname" "fake_cmd_output")"
+	assert_equals "user@e-mail.com<Tab>paSSw0rd" "${output}" "output autotype: unexpected output"
+}
+
+test_output_autotype_single_keyword() {
+    fake pass_get fake_pass_get
+    fake press_key fake_press_key
+    fake generate_otp fake_generate_otp
+    declare -A outputs
+    declare -A type_outputs
+
+    outputs[tab]="	"
+    outputs[space]=" "
+    outputs[enter]="$(printf "\n")"
+    outputs[delay]=""
+    outputs[otp]="12345678"
+    outputs[password]="paSSw0rd"
+    outputs[path]="passname"
+	outputs[username]="user@e-mail.com"
+	outputs[url]="https://example.com"
+
+    type_outputs[tab]="<Tab>"
+    type_outputs[space]="<space>"
+    type_outputs[enter]="<Return>"
+    type_outputs[delay]=""
+    type_outputs[otp]="12345678"
+    type_outputs[password]="paSSw0rd"
+    type_outputs[path]="passname"
+	type_outputs[username]="user@e-mail.com"
+	type_outputs[url]="https://example.com"
+
+    keywords=("tab" "space" "enter" "delay" "otp" "password" "path" "username" "url")
+    for keyword in "${keywords[@]}"; do
+        FLAG_TYPE=0
+        if [ "${keyword}" = "username" ] || [ "${keyword}" = "url" ]; then
+            WOFI_PASS_AUTOTYPE="${keyword}"
+        else
+            WOFI_PASS_AUTOTYPE=":${keyword}"
+        fi
+        local output="$(output_autotype "/dir/dir1/passname" "fake_cmd_output")"
+        assert_equals "${outputs[${keyword}]}" "${output}" "output autotype: unexpected output"
+
+        FLAG_TYPE=1
+        output="$(output_autotype "/dir/dir1/passname" "fake_cmd_output")"
+        assert_equals "${type_outputs[${keyword}]}" "${output}" "output autotype: unexpected output"
+    done
 }
 
 setup_suite() {
