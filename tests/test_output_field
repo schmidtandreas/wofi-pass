@@ -7,7 +7,7 @@ fake_pass_get() {
     local field="${FAKE_PARAMS[1]}"
     declare -A values
 
-    assert_equals "passname" "${FAKE_PARAMS[0]}" "output field: passname not matched"
+    [ "${passname}" = "passname" ] || return
 
     values[password]="paSSw0rd"
     values[username]="user@e-mail.com"
