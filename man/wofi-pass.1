@@ -39,6 +39,10 @@ One way to customize the \fBwofi\-pass\fR behavior is to change the configuratio
 If the environment variable \fB${XDG_CONFIG_HOME}\fR is not set, it is replaced by the default value \fB${HOME}/\.config\fR\.
 .SH "CONFIGURATION VARIABLES"
 The following varialbes can be redefined in configuration file\.
+.SS "COMMON"
+.TP
+\fBPASSWORD_STORE_DIR\fR
+Path to the pass storage files\. Default: \fB${HOME}/\.password\-store\fR
 .SS "COMMANDS"
 .TP
 \fBCMD_COPY\fR
@@ -64,9 +68,7 @@ pin: 1234
 .P
 Note that the password is \fBALWAYS\fR on the first line\.
 .SH "AUTOTYPE"
-The function \fIautotype\fR activates a formatted output of a \fBpass\fR entry\. The output is formatted as follows:
-.P
-\fBusername :tab password\fR
+The function \fIautotype\fR activates a formatted output of a \fBpass\fR entry\.
 .P
 The \fIautotype\fR function can be activated in 3 different ways:
 .IP "1." 4
@@ -76,4 +78,32 @@ selecting the field \fBautotype\fR will output the entry formatted
 .IP "3." 4
 adding the field \fBautotype_always\fR to the \fBpass\fR entry, this entry will always be output formatted\.
 .IP "" 0
-
+.SS "AUTOTYPE FORMAT"
+The format of the \fIautotype\fR is by default is as follows:
+.P
+\fBusername :tab pass\fR
+.P
+and is defined by \fBWOFI_PASS_AUTOTYPE\fR\. The autotype format string consists of cobination of keywords and pass fields separated by a space\. The keywords are the follows:
+.TP
+\fB:tab\fR
+Type the Tab\-key if type mode active else output \et\.
+.TP
+\fB:space\fR
+Type the Space\-key if type mode active else output " "\.
+.TP
+\fB:enter\fR
+Type the Enter\-key if type mode active else output \en\.
+.TP
+\fB:delay\fR
+Delay the output for a specified time\. The time is defined by \fBWOFI_PASS_DELAY\fR in seconds, where the default value is \fB2\fR seconds\. Is only executed when type mode is active\.
+.TP
+\fB:otp\fR
+Output the One Time Password
+.TP
+\fB:password\fR
+Output the password
+.TP
+\fB:path\fR
+Output the filename of selected \fB:pass\fR entry
+.P
+All other entries are interpreted as \fBpass\fR fields and output the contents of the respective field\.
