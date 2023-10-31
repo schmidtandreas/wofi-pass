@@ -1,38 +1,79 @@
 .\" generated with Ronn-NG/v0.9.1
 .\" http://github.com/apjanke/ronn-ng/tree/0.9.1
-.TH "WOFI\-PASS" "1" "May 2023" ""
+.TH "WOFI\-PASS" "1" "October 2023" ""
 .SH "NAME"
 \fBwofi\-pass\fR \- pass support for wofi
+.SH "SYNOPSIS"
+\fBwofi\-pass\fR [\fIOPTIONS\fR\|\.\|\.\|\.]
 .SH "OPTIONS"
 .TP
 \fB\-a\fR, \fB\-\-autotype\fR
-Autotype whatever entry is chosen
+Autotype whatever entry is chosen\.
 .TP
 \fB\-c\fR, \fB\-\-copy\fR [\fIcmd\fR]
-Copy to clipboard\. Defaults to wl\-copy if no cmd is given\.
+Copy to clipboard\. Defaults to \fBwl\-copy\fR if no \fIcmd\fR is given\.
 .TP
 \fB\-f\fR, \fB\-\-fileisuser\fR
-Use the name of the password file as username
+Use the name of the password file as username\.
 .TP
 \fB\-h\fR, \fB\-\-help\fR
 Show the help message
 .TP
 \fB\-s\fR, \fB\-\-squash\fR
-Don't show field choice if password file only contains password\.
+Don\'t show field choice if password file only contains password\.
 .TP
 \fB\-t\fR, \fB\-\-type\fR [\fIcmd\fR]
-Type the selection instead of copying to clipboard\. Defaults to wtype if no cmd is given\. This also enables the autotype choice which types \fBusername :tab password\fR\.
+Type the selection instead of copying to clipboard\. Defaults to \fBwtype\fR if no \fIcmd\fR is given\.
+.SH "CONFIGURATION FILE"
+One way to customize the \fBwofi\-pass\fR behavior is to change the configuration file\. \fBwofi\-pass\fR does not require a configuration file, but searches the following paths for a valid configuration file at every startup:
+.IP "\[ci]" 4
+\fB${WOFI_PASS_CONFIG}\fR
+.IP "\[ci]" 4
+\fB${XDG_CONFIG_HOME}/wofi\-pass/config\fR
+.IP "\[ci]" 4
+\fB/etc/wofi\-pass\.conf\fR
+.IP "" 0
+.P
+\fBwofi\-pass\fR only reads the first configuration file it finds\. The order of searching is the same as in the list above\.
+.P
+If the environment variable \fB${XDG_CONFIG_HOME}\fR is not set, it is replaced by the default value \fB${HOME}/\.config\fR\.
+.SH "CONFIGURATION VARIABLES"
+The following varialbes can be redefined in configuration file\.
+.SS "COMMANDS"
+.TP
+\fBCMD_COPY\fR
+Command to redirect the output to the clipboard\. Default: \fBwl\-copy\fR
+.TP
+\fBCMD_TYPE\fR
+Command to type the output\. Default: \fBwcopy \-\fR
+.SS "PASS FIELDS"
+.TP
+\fBPASS_FIELD_USERNAME\fR
+\fBpass\fR field to be used as username for autotype\. Default: \fBusername\fR
 .SH "PASSWORD FILES"
 \fBwofi\-pass\fR assumes password files are formatted like the following:
-.P
+.IP "" 4
+.nf
 Th3Gr3at3stPassw0rd
-.br
 username: JohnDoe
-.br
 email: john@example\.com
-.br
 otpauth://totp/example?secret=ABCDCBABCDCBABCD
-.br
 pin: 1234
+.fi
+.IP "" 0
 .P
 Note that the password is \fBALWAYS\fR on the first line\.
+.SH "AUTOTYPE"
+The function \fIautotype\fR activates a formatted output of a \fBpass\fR entry\. The output is formatted as follows:
+.P
+\fBusername :tab password\fR
+.P
+The \fIautotype\fR function can be activated in 3 different ways:
+.IP "1." 4
+by setting the option \fB\-a\fR the selected entry will be output formatted
+.IP "2." 4
+selecting the field \fBautotype\fR will output the entry formatted
+.IP "3." 4
+adding the field \fBautotype_always\fR to the \fBpass\fR entry, this entry will always be output formatted\.
+.IP "" 0
+

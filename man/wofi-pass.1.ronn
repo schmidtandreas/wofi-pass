@@ -1,16 +1,20 @@
 wofi-pass(1) -- pass support for wofi
 ===
 
+## SYNOPSIS
+
+`wofi-pass` [<OPTIONS>...]
+
 ## OPTIONS
 
 * `-a`, `--autotype`:
-Autotype whatever entry is chosen
+Autotype whatever entry is chosen.
 
 * `-c`, `--copy` [<cmd>]:
-Copy to clipboard. Defaults to wl-copy if no cmd is given.
+Copy to clipboard. Defaults to `wl-copy` if no <cmd> is given.
 
 * `-f`, `--fileisuser`:
-Use the name of the password file as username
+Use the name of the password file as username.
 
 * `-h`, `--help`:
 Show the help message
@@ -20,17 +24,63 @@ Don't show field choice if password file only contains password.
 
 * `-t`, `--type` [<cmd>]:
 Type the selection instead of copying to clipboard.
-Defaults to wtype if no cmd is given.
-This also enables the autotype choice which types `username :tab password`.
+Defaults to `wtype` if no <cmd> is given.
+
+## CONFIGURATION FILE
+
+One way to customize the `wofi-pass` behavior is to change the configuration file.
+`wofi-pass` does not require a configuration file,
+but searches the following paths for a valid configuration file at every startup:
+
+- `${WOFI_PASS_CONFIG}`
+- `${XDG_CONFIG_HOME}/wofi-pass/config`
+- `/etc/wofi-pass.conf`
+
+`wofi-pass` only reads the first configuration file it finds.
+The order of searching is the same as in the list above.
+
+If the environment variable `${XDG_CONFIG_HOME}` is not set,
+it is replaced by the default value `${HOME}/.config`. 
+
+## CONFIGURATION VARIABLES
+
+The following varialbes can be redefined in configuration file.
+
+### COMMANDS
+
+* `CMD_COPY` :
+Command to redirect the output to the clipboard. Default: `wl-copy`
+
+* `CMD_TYPE` :
+Command to type the output. Default: `wcopy -`
+
+### PASS FIELDS
+
+* `PASS_FIELD_USERNAME`:
+`pass` field to be used as username for autotype. Default: `username`
 
 ## PASSWORD FILES
 
 `wofi-pass` assumes password files are formatted like the following:
 
-Th3Gr3at3stPassw0rd    
-username: JohnDoe    
-email: john@example.com    
-otpauth://totp/example?secret=ABCDCBABCDCBABCD    
-pin: 1234    
+    Th3Gr3at3stPassw0rd
+    username: JohnDoe
+    email: john@example.com
+    otpauth://totp/example?secret=ABCDCBABCDCBABCD
+    pin: 1234
 
 Note that the password is **ALWAYS** on the first line.
+
+## AUTOTYPE
+
+The function <autotype> activates a formatted output of a `pass` entry.
+The output is formatted as follows:
+
+`username :tab password`
+
+The <autotype> function can be activated in 3 different ways:
+
+1. by setting the option `-a` the selected entry will be output formatted
+2. selecting the field `autotype` will output the entry formatted
+3. adding the field `autotype_always` to the `pass` entry, this entry will always be output formatted.
+
