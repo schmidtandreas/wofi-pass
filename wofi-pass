@@ -12,11 +12,15 @@ FLAG_SQUASH=0
 FLAG_TYPE=0
 FLAG_HELP=0
 
-CMD_COPY="wl-copy"
-CMD_TYPE="wtype -"
+CMD_COPY="${CMD_COPY:-"wl-copy"}"
+CMD_TYPE="${CMD_TYPE:-"wtype -"}"
 
 # We expect to find these fields in pass(1)'s output
-PASS_FIELD_USERNAME='username'
+PASS_FIELD_USERNAME="${PASS_FIELD_USERNAME:-"username"}"
+
+WOFI_PASS_AUTOTYPE="${WOFI_PASS_AUTOTYPE:-"${PASS_FIELD_USERNAME} :tab :password"}"
+WOFI_PASS_DELAY=${WOFI_PASS_DELAY:-2}
+WOFI_PASS_AUTO_ENTER="${WOFI_PASS_AUTO_ENTER:-"false"}"
 
 function _wofi() {
     wofi "${@}"
@@ -33,6 +37,11 @@ function _trim() {
     # remove trailing whitespace characters
     var="${var%"${var##*[![:space:]]}"}"
     printf '%s' "${var}"
+}
+
+function generate_otp() {
+    local -r passname="${1}"
+    pass otp "${passname}" | tail -n1 | { IFS= read -r pass; printf %s "${pass}"; }
 }
 
 function parse_fields() {
@@ -91,7 +100,7 @@ function pass_get() {
     if [ "${field}" = "password" ]; then
         _pass show "${passname}" | { IFS= read -r pass; printf %s "${pass}"; }
     elif [ "${field}" = "OTP" ]; then
-        _pass otp "${passname}" | tail -n1 | { IFS= read -r pass; printf %s "${pass}"; }
+        generate_otp "${passname}"
     elif [ ${FLAG_FILEISUSER} -eq 1 ] && [ "${field}" = "${PASS_FIELD_USERNAME}" ]; then
         printf %s "${passname##*/}"
     else
@@ -214,12 +223,36 @@ function get_output_cmd() {
     fi
 }
 
+function press_key() {
+    local -r key="${1}"
+    wtype -P "${key}" -p "${key}"
+}
+
 function output_autotype() {
-    local -r username="${1}"
-    local -r password="${2}"
-    local -r cmd_output="${3}"
-    #TODO: improve autotype handling
-    printf '%s\t%s\n' "${username}" "${password}" | ${cmd_output}
+    local -r passname="${1}"
+    local -r cmd_output="${2}"
+    local password
+    password="$(pass_get "${passname}" "password")"
+    readonly password
+    local autotype
+
+    autotype="$(pass_get "${passname}" "autotype")"
+    [ -z "${autotype}" ] && autotype="${WOFI_PASS_AUTOTYPE}"
+    readonly autotype
+
+    for word in ${autotype}; do
+        case "${word}" in
+            ":tab") [ ${FLAG_TYPE} -eq 1 ] && press_key "Tab" || printf "\t";;
+            ":space") [ ${FLAG_TYPE} -eq 1 ] && press_key "space" || printf " ";;
+            ":enter") [ ${FLAG_TYPE} -eq 1 ] && press_key "Return" || printf "\n";;
+            ":delay") [ ${FLAG_TYPE} -eq 1 ] && sleep "${WOFI_PASS_DELAY}";;
+            ":otp") printf "%s" "$(generate_otp "${passname}")" | ${cmd_output};;
+            ":password") printf "%s" "${password}" | ${cmd_output};;
+            ":path") printf "%s" "${passname##*/}" | ${cmd_output};;
+            *) printf "%s" "$(pass_get "${passname}" "${word}")" | ${cmd_output}
+        esac
+    done
+    [[ "${WOFI_PASS_AUTO_ENTER}" != "false" ]] && press_key "Return"
 }
 
 function output_field() {
@@ -229,16 +262,12 @@ function output_field() {
     cmd_output="$(get_output_cmd)"
 
     if [ ${FLAG_AUTOTYPE} -eq 1 ] || [ "${field}" = "autotype" ]; then
-        local username
-        local password
-        username="$(pass_get "${passname}" "${PASS_FIELD_USERNAME}")"
-        password="$(pass_get "${passname}" "password")"
-
         # check if we are autotyping a password-only file
         if [ ${FLAG_ONLYPASSWORD} -eq 1 ]; then
+            local -r password="$(pass_get "${passname}" "password")"
             printf '%s\n' "${password}" | ${cmd_output}
         else
-            output_autotype "${username}" "${password}" "${cmd_output}"
+            output_autotype "${passname}" "${cmd_output}"
         fi
     else
         pass_get "${passname}" "${field}" | ${cmd_output}
