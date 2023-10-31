@@ -44,7 +44,6 @@ the field choice dialogue when there is only a password in the file.
 
 The `-t | --type` flag tells `wofi-pass` to type the choice
 instead of copying to clipboard.
-This also enables the autotype choice which types `username :tab password`.
 
 An entry can be marked with `autotype_always` and
 is thus always automatically output as autotype.
