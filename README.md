@@ -12,12 +12,15 @@ Usage: wofi-pass [options]
 				Defaults to wtype if no cmd is given.
 ```
 
-Since `wofi` isn't a drop-in replacement for `rofi`, I couldn't use 
-[rofi-pass](https://github.com/carnager/rofi-pass) anymore. So, I just made a 
-version of `passmenu` that accomplishes everything I needed from `rofi-pass`. 
+Since `wofi` isn't a drop-in replacement for `rofi`,
+I couldn't use [rofi-pass](https://github.com/carnager/rofi-pass) anymore.
+So, [Joel Beckmeyer](https://github.com/TinfoilSubmarine) and me just made
+a version of `passmenu` that accomplishes everything we needed from `rofi-pass`. 
+However, suggestions are always welcome best in the form of a PR.
 
 ## What does it do?
-This script uses [wofi](https://hg.sr.ht/~scoopta/wofi) and 
+This script uses [wofi](https://hg.sr.ht/~scoopta/wofi),
+[wcopy](https://github.com/bugaevc/wl-clipboard) and 
 [wtype](https://github.com/atx/wtype) to provide a completely 
 Wayland-native way to conveniently use [pass](https://www.passwordstore.org/). 
 It provides the same search that `passmenu` does, but shows a second dialogue 
@@ -39,19 +42,25 @@ Note that the password is **ALWAYS** on the first line.
 The `-s | --squash` flag tells `wofi-pass` to "intelligently" skip 
 the field choice dialogue when there is only a password in the file.
 
-The `-t | --type` flag tells `wofi-pass` to type the choice instead of copying 
-to clipboard. This also enables the autotype choice which types 
-`username :tab password`.
+The `-t | --type` flag tells `wofi-pass` to type the choice
+instead of copying to clipboard.
+This also enables the autotype choice which types `username :tab password`.
+
+An entry can be marked with `autotype_always` and
+is thus always automatically output as autotype.
 
 ## Configuration
 
-wofi-pass can read its configuration values from various locations in the following order:
-* `WOFI_PASS_CONFIG` (environment variable)
-* `$XDG_CONFIG_HOME/wofi-pass/config`
+`wofi-pass` can read its configuration values from various locations
+in the following order:
+* `${WOFI_PASS_CONFIG}`
+* `${XDG_CONFIG_HOME}/wofi-pass/config`
 * `/etc/wofi-pass.conf`
 
-If `XDG_CONFIG_HOME` environment variable is not set, `${HOME}/.config` will be used.
+If `${XDG_CONFIG_HOME}` environment variable is not set,
+`${HOME}/.config` will be used.
 
-wofi-pass loads only the first existing file. If no configuration file exists, wofi-pass uses its internal defaults.
+`wofi-pass` loads only the first existing file.
+If no configuration file exists, `wofi-pass` uses its internal defaults.
 
 An example configuration file can be found in the supplied `wofi-pass.conf` file.
