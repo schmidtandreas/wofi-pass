@@ -14,6 +14,7 @@ fake_pass_get() {
 	values[user]="other@user-name.com"
     values[url]="https://example.com"
     values[OTP]="12345678"
+    values[autotype]=""
     printf "%s" "${values[${field}]}"
 }
 
@@ -46,6 +47,7 @@ test_output_field_autotype() {
     assert_equals "user@e-mail.com	paSSw0rd" "${output}" "output field: unexpected output for autotype"
 
 	PASS_FIELD_USERNAME="user"
+	WOFI_PASS_AUTOTYPE="${PASS_FIELD_USERNAME} :tab :password"
 	output="$(output_field "passname" "user")"
     assert_equals "other@user-name.com	paSSw0rd" "${output}" "output field: unexpected output for autotype"
 
