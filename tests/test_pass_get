@@ -7,9 +7,15 @@ fake_pass() {
 	
 	if [ "${cmd}" = "show" ]; then
 		printf "%s\n" "${output[@]}"
-	elif [ "${cmd}" = "otp" ]; then
-		printf "12345678"
 	fi
+}
+
+fake_generate_otp() {
+    local -r passname="${FAKE_PARAMS[0]}"
+
+    [ "${passname}" != "/dir/dir1/passname" ] && return
+
+    printf "%s" "12345678"
 }
 
 test_pass_get_password() {
@@ -20,7 +26,7 @@ test_pass_get_password() {
 }
 
 test_pass_get_otp() {
-	fake _pass fake_pass
+	fake generate_otp fake_generate_otp
 
 	local output="$(pass_get "/dir/dir1/passname" "OTP")"
 	assert_equals "12345678" "${output}" "pass get: unexpected otp"
