@@ -117,6 +117,9 @@ Output the One Time Password
 * `:password`:
 Output the password
 
+* `:username`:
+Output the username field, defined by `PASS_FIELD_USERNAME`
+
 * `:path`:
 Output the filename of selected `:pass` entry
 
