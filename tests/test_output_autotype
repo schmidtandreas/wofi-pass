@@ -13,6 +13,7 @@ fake_pass_get() {
     values[password]="paSSw0rd"
     values[username]="user@e-mail.com"
 	values[user]="other@user-name.com"
+    values[login]="userlogin"
     values[url]="https://example.com"
     values[autotype]=""
     printf "%s" "${values[${field}]}"
@@ -42,6 +43,10 @@ test_output_autotype_default() {
     FLAG_TYPE=1
 	output="$(output_autotype "/dir/dir1/passname" "fake_cmd_output")"
 	assert_equals "user@e-mail.com<Tab>paSSw0rd" "${output}" "output autotype: unexpected output"
+
+    PASS_FIELD_USERNAME="login"
+	output="$(output_autotype "/dir/dir1/passname" "fake_cmd_output")"
+	assert_equals "userlogin<Tab>paSSw0rd" "${output}" "output autotype: unexpected output"
 }
 
 test_output_autotype_single_keyword() {
@@ -59,6 +64,7 @@ test_output_autotype_single_keyword() {
     outputs[password]="paSSw0rd"
     outputs[path]="passname"
 	outputs[username]="user@e-mail.com"
+    outputs[login]="userlogin"
 	outputs[url]="https://example.com"
 
     type_outputs[tab]="<Tab>"
@@ -69,12 +75,13 @@ test_output_autotype_single_keyword() {
     type_outputs[password]="paSSw0rd"
     type_outputs[path]="passname"
 	type_outputs[username]="user@e-mail.com"
+    type_outputs[login]="userlogin"
 	type_outputs[url]="https://example.com"
 
-    keywords=("tab" "space" "enter" "delay" "otp" "password" "path" "username" "url")
+    keywords=("tab" "space" "enter" "delay" "otp" "password" "path" "username" "login" "url")
     for keyword in "${keywords[@]}"; do
         FLAG_TYPE=0
-        if [ "${keyword}" = "username" ] || [ "${keyword}" = "url" ]; then
+        if [ "${keyword}" = "login" ] || [ "${keyword}" = "url" ]; then
             WOFI_PASS_AUTOTYPE="${keyword}"
         else
             WOFI_PASS_AUTOTYPE=":${keyword}"
@@ -86,6 +93,19 @@ test_output_autotype_single_keyword() {
         output="$(output_autotype "/dir/dir1/passname" "fake_cmd_output")"
         assert_equals "${type_outputs[${keyword}]}" "${output}" "output autotype: unexpected output"
     done
+}
+
+test_output_autotype_customize_username() {
+    fake pass_get fake_pass_get
+    fake press_key fake_press_key
+
+    WOFI_PASS_AUTOTYPE=":username"
+    local output="$(output_autotype "/dir/dir1/passname" "fake_cmd_output")"
+    assert_equals "user@e-mail.com" "${output}" "output autotype: unexpected output for default username"
+
+    PASS_FIELD_USERNAME="login"
+    output="$(output_autotype "/dir/dir1/passname" "fake_cmd_output")"
+    assert_equals "userlogin" "${output}" "output autotype: unexpected output for customized username"
 }
 
 setup_suite() {

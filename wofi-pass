@@ -18,7 +18,7 @@ CMD_TYPE="${CMD_TYPE:-"wtype -"}"
 # We expect to find these fields in pass(1)'s output
 PASS_FIELD_USERNAME="${PASS_FIELD_USERNAME:-"username"}"
 
-WOFI_PASS_AUTOTYPE="${WOFI_PASS_AUTOTYPE:-"${PASS_FIELD_USERNAME} :tab :password"}"
+WOFI_PASS_AUTOTYPE="${WOFI_PASS_AUTOTYPE:-":username :tab :password"}"
 WOFI_PASS_DELAY=${WOFI_PASS_DELAY:-2}
 WOFI_PASS_AUTO_ENTER="${WOFI_PASS_AUTO_ENTER:-"false"}"
 
@@ -248,6 +248,7 @@ function output_autotype() {
             ":delay") [ ${FLAG_TYPE} -eq 1 ] && sleep "${WOFI_PASS_DELAY}";;
             ":otp") printf "%s" "$(generate_otp "${passname}")" | ${cmd_output};;
             ":password") printf "%s" "${password}" | ${cmd_output};;
+            ":username") printf "%s" "$(pass_get "${passname}" "${PASS_FIELD_USERNAME}")" | ${cmd_output};;
             ":path") printf "%s" "${passname##*/}" | ${cmd_output};;
             *) printf "%s" "$(pass_get "${passname}" "${word}")" | ${cmd_output}
         esac
