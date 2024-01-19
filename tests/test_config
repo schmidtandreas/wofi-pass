@@ -6,8 +6,8 @@ test_config_load_empty(){
     local debug_output=""
     fake get_config_file echo ""
 
-    debug_output="$(coproc cat
-    exec {test_channel}>&${COPROC[1]}
+    debug_output="$(coproc CAT { cat; }
+    exec {test_channel}>&${CAT[1]}
     exec 2>&${test_channel}
     set -x
     load_config_file 2>&${test_channel}
@@ -16,7 +16,7 @@ test_config_load_empty(){
     local line=""
     while IFS= read -t 0.5 -r line || [[ -n "${line}" ]]; do
         printf "|%s|\n" "${line}"
-    done <&${COPROC[0]})"
+    done <&${CAT[0]})"
 
     assert_matches ".*FAKE_PARAMS.*" "${debug_output}" "config load: mock get_config_file not executed"
     assert_matches "\|.*[+]+[ ]*config_file=\|.*" "${debug_output}" "config load: config_file variable not empty as expected"
