@@ -66,12 +66,25 @@ test_args_type() {
 }
 
 test_args_unknown() {
+    options_text="$(getopt --options "a" -n "wofi-pass" -- "-x" 2>&1 | head -1)"
+    options_text="${options_text%--*}"
+
+    longoptions_text="$(getopt --options "a" --longoptions "aa" -n "wofi-pass" -- "--not-exist" 2>&1 | head -1)"
+    longoptions_text="${longoptions_text%--*}"
+
     error_out="$(parse_arguments --not-exist 2>&1)"
-    assert_matches ".*unrecognized option.*" "${error_out}" "args: parsed not defined parameter"
+    assert_matches "${longoptions_text}.*" "${error_out}" "args: parsed not defined parameter"
     error_out="$(parse_arguments -f --type --not-exist 2>&1)"
-    assert_matches ".*unrecognized option.*" "${error_out}" "args: parsed not defined parameter"
+    assert_matches "${longoptions_text}.*" "${error_out}" "args: parsed not defined parameter"
     error_out="$(parse_arguments -a --not-exist -t 2>&1)"
-    assert_matches ".*unrecognized option.*" "${error_out}" "args: parsed not defined parameter"
+    assert_matches "${longoptions_text}.*" "${error_out}" "args: parsed not defined parameter"
+
+    error_out="$(parse_arguments -x 2>&1)"
+    assert_matches "${options_text}.*" "${error_out}" "args: parsed not defined parameter"
+    error_out="$(parse_arguments -f --type -x 2>&1)"
+    assert_matches "${options_text}.*" "${error_out}" "args: parsed not defined parameter"
+    error_out="$(parse_arguments -a -x -t 2>&1)"
+    assert_matches "${options_text}.*" "${error_out}" "args: parsed not defined parameter"
 }
 
 setup_suite() {
