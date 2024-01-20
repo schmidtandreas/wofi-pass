@@ -1,4 +1,4 @@
-[![Build Status](https://app.travis-ci.com/schmidtandreas/wofi-pass.svg?branch=main)](https://app.travis-ci.com/schmidtandreas/wofi-pass)
+![testing](https://github.com/schmidtandreas/wofi-pass/actions/workflows/testing.yml/badge.svg)
 
 # wofi-pass
 ```
