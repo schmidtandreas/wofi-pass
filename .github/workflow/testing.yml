@@ -1,0 +1,16 @@
+name: wofi-pass testing
+
+on: push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Verify the shell script
+        run: shellcheck -x wofi-pass
+
+      - name: Run all tests
+        run: ./bash_unit/bash_unit -f tab ./tests/test_*
