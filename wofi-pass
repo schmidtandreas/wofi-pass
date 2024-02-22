@@ -27,7 +27,7 @@ function _wofi() {
 }
 
 function _pass() {
-    pass "${@}"
+    PASSWORD_STORE_DIR="${PASSWORD_STORE_DIR}" pass "${@}"
 }
 
 function _trim() {
