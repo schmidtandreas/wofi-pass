@@ -46,13 +46,7 @@ test_config_get_user_config_file() {
     assert_equals "${USER_CFG_FILE}" "${cfg_file}" "config get file: get user config file failed"
 
 }
-
-# If the user config file already exists, we skip the test to avoid
-# waste the user environment or get false positive test result
-if [ -f "${USER_CFG_FILE}" ]; then
-    eval "$(echo "pending_test_config_get_user_config_file() { assert_false; }")"
-    unset -f test_config_get_user_config_file
-fi
+skip_if "[ -f \"${USER_CFG_FILE}\" ]" "test_config_get_user_config_file"
 
 test_config_get_custom_config_file() {
     WOFI_PASS_CONFIG="${TEST_CONFIG_FILE}"
@@ -73,13 +67,7 @@ test_config_get_global_config_file() {
 
     assert_equals "${GLOBAL_CFG_FILE}" "${cfg_file}" "config get file: get global config file failed"
 }
-
-# If the global config file already exists, we skip the test to avoid
-# waste the system or get false positive test result
-if [ -f "${GLOBAL_CFG_FILE}" ]; then
-    eval "$(echo "pending_test_config_get_global_config_file() { assert_false; }")"
-    unset -f test_config_get_global_config_file
-fi
+skip_if "[ -f \"${GLOBAL_CFG_FILE}\" ]" "test_config_get_global_config_file"
 
 setup_suite() {
     WOFI_PASS_TESTING="1"
