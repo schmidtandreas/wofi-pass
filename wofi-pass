@@ -27,7 +27,11 @@ function _wofi() {
 }
 
 function _pass() {
-    PASSWORD_STORE_DIR="${PASSWORD_STORE_DIR}" pass "${@}"
+    if [ -n "${PASSWORD_STORE_DIR:-""}" ]; then
+        PASSWORD_STORE_DIR="${PASSWORD_STORE_DIR}" pass "${@}"
+    else
+        pass "${@}"
+    fi
 }
 
 function _trim() {
