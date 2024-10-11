@@ -44,7 +44,7 @@ it is replaced by the default value `${HOME}/.config`.
 
 ## CONFIGURATION VARIABLES
 
-The following varialbes can be redefined in configuration file.
+The following variables can be redefined in configuration file.
 
 ### COMMON
 
@@ -93,7 +93,7 @@ The format of the <autotype> is by default is as follows:
 `username :tab pass`
 
 and is defined by `WOFI_PASS_AUTOTYPE`.
-The autotype format string consists of cobination of keywords and pass fields separated by a space.
+The autotype format string consists of a combination of keywords and pass fields separated by a space.
 The keywords are the follows:
 
 * `:tab`:
