@@ -1,6 +1,6 @@
-.\" generated with Ronn-NG/v0.9.1
-.\" http://github.com/apjanke/ronn-ng/tree/0.9.1
-.TH "WOFI\-PASS" "1" "December 2023" ""
+.\" generated with Ronn-NG/v0.10.1
+.\" http://github.com/apjanke/ronn-ng/tree/0.10.1
+.TH "WOFI\-PASS" "1" "October 2024" ""
 .SH "NAME"
 \fBwofi\-pass\fR \- pass support for wofi
 .SH "SYNOPSIS"
@@ -20,17 +20,17 @@ Use the name of the password file as username\.
 Show the help message
 .TP
 \fB\-s\fR, \fB\-\-squash\fR
-Don\'t show field choice if password file only contains password\.
+Don't show field choice if password file only contains password\.
 .TP
 \fB\-t\fR, \fB\-\-type\fR [\fIcmd\fR]
 Type the selection instead of copying to clipboard\. Defaults to \fBwtype\fR if no \fIcmd\fR is given\.
 .SH "CONFIGURATION FILE"
 One way to customize the \fBwofi\-pass\fR behavior is to change the configuration file\. \fBwofi\-pass\fR does not require a configuration file, but searches the following paths for a valid configuration file at every startup:
-.IP "\[ci]" 4
+.IP "\(bu" 4
 \fB${WOFI_PASS_CONFIG}\fR
-.IP "\[ci]" 4
+.IP "\(bu" 4
 \fB${XDG_CONFIG_HOME}/wofi\-pass/config\fR
-.IP "\[ci]" 4
+.IP "\(bu" 4
 \fB/etc/wofi\-pass\.conf\fR
 .IP "" 0
 .P
@@ -38,7 +38,7 @@ One way to customize the \fBwofi\-pass\fR behavior is to change the configuratio
 .P
 If the environment variable \fB${XDG_CONFIG_HOME}\fR is not set, it is replaced by the default value \fB${HOME}/\.config\fR\.
 .SH "CONFIGURATION VARIABLES"
-The following varialbes can be redefined in configuration file\.
+The following variables can be redefined in configuration file\.
 .SS "COMMON"
 .TP
 \fBPASSWORD_STORE_DIR\fR
@@ -83,7 +83,7 @@ The format of the \fIautotype\fR is by default is as follows:
 .P
 \fBusername :tab pass\fR
 .P
-and is defined by \fBWOFI_PASS_AUTOTYPE\fR\. The autotype format string consists of cobination of keywords and pass fields separated by a space\. The keywords are the follows:
+and is defined by \fBWOFI_PASS_AUTOTYPE\fR\. The autotype format string consists of a combination of keywords and pass fields separated by a space\. The keywords are the follows:
 .TP
 \fB:tab\fR
 Type the Tab\-key if type mode active else output \et\.
