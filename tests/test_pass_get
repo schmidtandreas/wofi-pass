@@ -28,7 +28,7 @@ test_pass_get_password() {
 test_pass_get_otp() {
 	fake generate_otp fake_generate_otp
 
-	local output="$(pass_get "/dir/dir1/passname" "OTP")"
+	local output="$(pass_get "/dir/dir1/passname" "<<--OTP-->>")"
 	assert_equals "12345678" "${output}" "pass get: unexpected otp"
 }
 

@@ -22,6 +22,8 @@ WOFI_PASS_AUTOTYPE="${WOFI_PASS_AUTOTYPE:-":username :tab :password"}"
 WOFI_PASS_DELAY=${WOFI_PASS_DELAY:-2}
 WOFI_PASS_AUTO_ENTER="${WOFI_PASS_AUTO_ENTER:-"false"}"
 
+FIELD_OTP_TAG="<<--OTP-->>"
+
 function _wofi() {
     wofi "${@}"
 }
@@ -77,7 +79,7 @@ function parse_fields() {
                 field_list+=( "${line}" )
             fi
         elif [ "${line}" = "otpauth" ]; then
-            field_list+=( "OTP" )
+            field_list+=( "${FIELD_OTP_TAG}" )
         elif [ "${line}" = "autotype_always" ]; then
             FLAG_AUTOTYPE=1
         else
@@ -103,7 +105,7 @@ function pass_get() {
     local -r field="${2}"
     if [ "${field}" = "password" ]; then
         _pass show "${passname}" | { IFS= read -r pass; printf %s "${pass}"; }
-    elif [ "${field}" = "OTP" ]; then
+    elif [ "${field}" = "${FIELD_OTP_TAG}" ]; then
         generate_otp "${passname}"
     elif [ ${FLAG_FILEISUSER} -eq 1 ] && [ "${field}" = "${PASS_FIELD_USERNAME}" ]; then
         printf %s "${passname##*/}"
