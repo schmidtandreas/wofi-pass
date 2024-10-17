@@ -24,6 +24,9 @@ Don't show field choice if password file only contains password\.
 .TP
 \fB\-t\fR, \fB\-\-type\fR [\fIcmd\fR]
 Type the selection instead of copying to clipboard\. Defaults to \fBwtype\fR if no \fIcmd\fR is given\.
+.TP
+\fB\-k\fR, \fB\-\-nohotkeys\fR
+Disable the hotkeys support for wofi\-pass\. The hotkeys feature is by default enabled\. \fBwofi\fR supports the required custom keys feature from version v1\.4\. If you are using an older \fBwofi\fR version or a \fBwofi\fR alternative that does not have custom keys support at all, the hotkey feature can be disabled to avoid errors\.
 .SH "CONFIGURATION FILE"
 One way to customize the \fBwofi\-pass\fR behavior is to change the configuration file\. \fBwofi\-pass\fR does not require a configuration file, but searches the following paths for a valid configuration file at every startup:
 .IP "\(bu" 4
@@ -54,6 +57,19 @@ Command to type the output\. Default: \fBwcopy \-\fR
 .TP
 \fBPASS_FIELD_USERNAME\fR
 \fBpass\fR field to be used as username for autotype\. Default: \fBusername\fR
+.SS "HOTKEYS"
+.TP
+\fBHOTKEY_USERNAME\fR
+Hotkey definition for direct selection of the username field\. See \fBwofi\-keys\fR(7) for the key codes\. Default hotkey is \fBAlt\-u\fR\.
+.TP
+\fBHOTKEY_PASSWORD\fR
+Hotkey definition for direct selection of the password field\. See \fBwofi\-keys\fR(7) for the key codes\. Default hotkey is \fBAlt\-p\fR\.
+.TP
+\fBHOTKEY_AUTOTYPE\fR
+Hotkey definition for direct selection of the autotype field\. See \fBwofi\-keys\fR(7) for the key codes\. Default hotkey is \fBAlt\-a\fR\.
+.TP
+\fBHOTKEY_OTP\fR
+Hotkey definition for direct selection of the OTP field\. See \fBwofi\-keys\fR(7) for the key codes\. Default hotkey is \fBAlt\-o\fR\.
 .SH "PASSWORD FILES"
 \fBwofi\-pass\fR assumes password files are formatted like the following:
 .IP "" 4
@@ -74,7 +90,7 @@ The \fIautotype\fR function can be activated in 3 different ways:
 .IP "1." 4
 by setting the option \fB\-a\fR the selected entry will be output formatted
 .IP "2." 4
-selecting the field \fBautotype\fR will output the entry formatted
+selecting the field \fBautotype\fR or press \fBHOTKEY_AUTOTYPE\fR hotkey will output the entry formatted
 .IP "3." 4
 adding the field \fBautotype_always\fR to the \fBpass\fR entry, this entry will always be output formatted\.
 .IP "" 0

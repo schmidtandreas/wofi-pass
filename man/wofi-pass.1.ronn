@@ -26,6 +26,14 @@ Don't show field choice if password file only contains password.
 Type the selection instead of copying to clipboard.
 Defaults to `wtype` if no <cmd> is given.
 
+* `-k`, `--nohotkeys`:
+Disable the hotkeys support for wofi-pass.
+The hotkeys feature is by default enabled.
+`wofi` supports the required custom keys feature from version v1.4.
+If you are using an older `wofi` version or
+a `wofi` alternative that does not have custom keys support at all,
+the hotkey feature can be disabled to avoid errors.
+
 ## CONFIGURATION FILE
 
 One way to customize the `wofi-pass` behavior is to change the configuration file.
@@ -64,6 +72,24 @@ Command to type the output. Default: `wcopy -`
 * `PASS_FIELD_USERNAME`:
 `pass` field to be used as username for autotype. Default: `username`
 
+### HOTKEYS
+
+* `HOTKEY_USERNAME`:
+Hotkey definition for direct selection of the username field.
+See **wofi-keys**(7) for the key codes. Default hotkey is `Alt-u`.
+
+* `HOTKEY_PASSWORD`:
+Hotkey definition for direct selection of the password field.
+See **wofi-keys**(7) for the key codes. Default hotkey is `Alt-p`.
+
+* `HOTKEY_AUTOTYPE`:
+Hotkey definition for direct selection of the autotype field.
+See **wofi-keys**(7) for the key codes. Default hotkey is `Alt-a`.
+
+* `HOTKEY_OTP`:
+Hotkey definition for direct selection of the OTP field.
+See **wofi-keys**(7) for the key codes. Default hotkey is `Alt-o`.
+
 ## PASSWORD FILES
 
 `wofi-pass` assumes password files are formatted like the following:
@@ -83,7 +109,7 @@ The function <autotype> activates a formatted output of a `pass` entry.
 The <autotype> function can be activated in 3 different ways:
 
 1. by setting the option `-a` the selected entry will be output formatted
-2. selecting the field `autotype` will output the entry formatted
+2. selecting the field `autotype` or press `HOTKEY_AUTOTYPE` hotkey will output the entry formatted
 3. adding the field `autotype_always` to the `pass` entry, this entry will always be output formatted.
 
 ### AUTOTYPE FORMAT
