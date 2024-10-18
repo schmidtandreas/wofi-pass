@@ -2,12 +2,16 @@ argument_testing() {
     local -r short_arg="${1}"
     local -r long_arg="${2}"
     local -r flag_name="${3}"
-    local -r cmd_arg="${4:-""}"
+    local -r expected_value="${4}"
+    local -r cmd_arg="${5:-""}"
+    local init_value=0
 
-    flags=("FLAG_AUTOTYPE" "FLAG_COPY" "FLAG_FILEISUSER" "FLAG_HELP" "FLAG_SQUASH" "FLAG_TYPE")
+    flags=("FLAG_AUTOTYPE" "FLAG_COPY" "FLAG_FILEISUSER" "FLAG_HELP" "FLAG_SQUASH" "FLAG_TYPE" "FLAG_HOTKEYS_SUPPORTED")
+
+    [ ${expected_value} -eq 0 ] && init_value=1
 
     for flag in "${flags[@]}"; do
-        declare "${flag}"=0
+        declare "${flag}"=${init_value}
     done
     CMD_COPY="wl-copy"
     CMD_TYPE="wtype -"
@@ -16,53 +20,56 @@ argument_testing() {
     [[ "${flag_name}" == "FLAG_COPY" ]] && EXPECTED_CMD_COPY="${cmd_arg:-"wl-copy"}"
     [[ "${flag_name}" == "FLAG_TYPE" ]] && EXPECTED_CMD_TYPE="${cmd_arg:-"wtype -"}"
 
-    
-    parse_arguments "-${short_arg}${cmd_arg}"
-    assert_equals 1 ${!flag_name} "args: ${flag_name} was not set"
 
-    declare "${flag_name}"=0
+    parse_arguments "-${short_arg}${cmd_arg}"
+    assert_equals ${expected_value} ${!flag_name} "args: ${flag_name} was not set"
+
+    declare "${flag_name}"=${init_value}
     arg="${long_arg}"
     [ -n "${cmd_arg}" ] && arg="${long_arg}=${cmd_arg}"
     parse_arguments "--${arg}"
-    assert_equals 1 ${!flag_name} "args: ${flag_name} was not set"
+    assert_equals ${expected_value} ${!flag_name} "args: ${flag_name} was not set"
 
 
     for flag in "${flags[@]}"; do
-        value=0
+        value=${init_value}
         if [[ "${flag_name}" == "${flag}" ]]; then
-            value=1
+            value=${expected_value}
         fi
         assert_equals ${value} ${!flag} "args: ${flag} is not ${value}"
-
     done
     assert_equals "${EXPECTED_CMD_COPY}" "${CMD_COPY}" "args: CMD_COPY is not \"${EXPECTED_CMD_COPY}\""
     assert_equals "${EXPECTED_CMD_TYPE}" "${CMD_TYPE}" "args: CMD_TYPE is not \"${EXPECTED_CMD_TYPE}\""
 }
 
 test_args_autotype() {
-    argument_testing "a" "autotype" "FLAG_AUTOTYPE"
+    argument_testing "a" "autotype" "FLAG_AUTOTYPE" 1
 }
 
 test_args_copy() {
-    argument_testing "c" "copy" "FLAG_COPY"
-    argument_testing "c" "copy" "FLAG_COPY" "new-copy-cmd"
+    argument_testing "c" "copy" "FLAG_COPY" 1
+    argument_testing "c" "copy" "FLAG_COPY" 1 "new-copy-cmd"
 }
 
 test_args_fileisuser() {
-    argument_testing "f" "fileisuser" "FLAG_FILEISUSER"
+    argument_testing "f" "fileisuser" "FLAG_FILEISUSER" 1
 }
 
 test_args_help() {
-    argument_testing "h" "help" "FLAG_HELP"
+    argument_testing "h" "help" "FLAG_HELP" 1
 }
 
 test_args_squash() {
-    argument_testing "s" "squash" "FLAG_SQUASH"
+    argument_testing "s" "squash" "FLAG_SQUASH" 1
 }
 
 test_args_type() {
-    argument_testing "t" "type" "FLAG_TYPE"
-    argument_testing "t" "type" "FLAG_TYPE" "new-type-cmd"
+    argument_testing "t" "type" "FLAG_TYPE" 1
+    argument_testing "t" "type" "FLAG_TYPE" 1 "new-type-cmd"
+}
+
+test_args_nohotkey() {
+    argument_testing "k" "nohotkey" "FLAG_HOTKEYS_SUPPORTED" 0
 }
 
 test_args_unknown() {

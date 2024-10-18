@@ -2,7 +2,7 @@
 
 VERSION="24.0.3"
 
-set -eu
+set -euo pipefail
 
 FLAG_AUTOTYPE=0
 FLAG_COPY=0
@@ -11,6 +11,7 @@ FLAG_ONLYPASSWORD=0
 FLAG_SQUASH=0
 FLAG_TYPE=0
 FLAG_HELP=0
+FLAG_HOTKEYS_SUPPORTED=1
 
 CMD_COPY="${CMD_COPY:-"wl-copy"}"
 CMD_TYPE="${CMD_TYPE:-"wtype -"}"
@@ -21,6 +22,17 @@ PASS_FIELD_USERNAME="${PASS_FIELD_USERNAME:-"username"}"
 WOFI_PASS_AUTOTYPE="${WOFI_PASS_AUTOTYPE:-":username :tab :password"}"
 WOFI_PASS_DELAY=${WOFI_PASS_DELAY:-2}
 WOFI_PASS_AUTO_ENTER="${WOFI_PASS_AUTO_ENTER:-"false"}"
+
+HOTKEY_USERNAME="Alt-u"
+HOTKEY_PASSWORD="Alt-p"
+HOTKEY_AUTOTYPE="Alt-a"
+HOTKEY_OTP="Alt-o"
+HOTKEY_USERNAME_RET=10
+HOTKEY_PASSWORD_RET=11
+HOTKEY_AUTOTYPE_RET=12
+HOTKEY_OTP_RET=13
+
+FIELD_OTP_TAG="<<--OTP-->>"
 
 function _wofi() {
     wofi "${@}"
@@ -77,7 +89,7 @@ function parse_fields() {
                 field_list+=( "${line}" )
             fi
         elif [ "${line}" = "otpauth" ]; then
-            field_list+=( "OTP" )
+            field_list+=( "${FIELD_OTP_TAG}" )
         elif [ "${line}" = "autotype_always" ]; then
             FLAG_AUTOTYPE=1
         else
@@ -103,7 +115,7 @@ function pass_get() {
     local -r field="${2}"
     if [ "${field}" = "password" ]; then
         _pass show "${passname}" | { IFS= read -r pass; printf %s "${pass}"; }
-    elif [ "${field}" = "OTP" ]; then
+    elif [ "${field}" = "${FIELD_OTP_TAG}" ]; then
         generate_otp "${passname}"
     elif [ ${FLAG_FILEISUSER} -eq 1 ] && [ "${field}" = "${PASS_FIELD_USERNAME}" ]; then
         printf %s "${passname##*/}"
@@ -125,6 +137,7 @@ function usage() {
         -s, --squash      don't show field choice if password file only contains password
         -t, --type=[cmd]  type the selection instead of copying to clipboard.
                           Defaults to wtype if no cmd is given.
+        -k, --nohotkey    Disable hotkey support. By default hotkeys are supported.
 
     wofi-pass version ${VERSION}
 EOF
@@ -156,7 +169,7 @@ load_config_file () {
 }
 
 function parse_arguments() {
-    OPTS="$(getopt --options ac::fhst:: --longoptions autotype,copy::,fileisuser,help,squash,type:: -n 'wofi-pass' -- "${@}")"
+    OPTS="$(getopt --options ac::fhst::k --longoptions autotype,copy::,fileisuser,help,squash,type::,nohotkey -n 'wofi-pass' -- "${@}")"
     eval set -- "${OPTS}"
     while true; do
         case "${1}" in
@@ -172,6 +185,7 @@ function parse_arguments() {
                 FLAG_TYPE=1
                 [ -n "${2}" ] && CMD_TYPE="${2}"
                 shift 2;;
+            -k | --nohotkey) FLAG_HOTKEYS_SUPPORTED=0; shift;;
             --) shift; break;;
             *) break;;
       esac
@@ -199,14 +213,46 @@ function get_passname_from_menu() {
     local password_files
     password_files="$(find "${pass_dir}" -name "*.gpg" | sed "s|^${pass_dir}\/\(.*\)\.gpg$|\1|" | sort)"
     readonly password_files
+    local passname
+    local wofi_ret
+    local wofi_args=()
 
-    printf "%s" "$(printf '%s\n' "${password_files}" | _wofi --dmenu)"
+    wofi_args+=("--dmenu")
+    if [ ${FLAG_HOTKEYS_SUPPORTED} -eq 1 ]; then
+        [ -n "${HOTKEY_USERNAME}" ] && wofi_args+=("-D" "key_custom_0=${HOTKEY_USERNAME}")
+        [ -n "${HOTKEY_PASSWORD}" ] && wofi_args+=("-D" "key_custom_1=${HOTKEY_PASSWORD}")
+        [ -n "${HOTKEY_AUTOTYPE}" ] && wofi_args+=("-D" "key_custom_2=${HOTKEY_AUTOTYPE}")
+        [ -n "${HOTKEY_OTP}" ] && wofi_args+=("-D" "key_custom_3=${HOTKEY_OTP}")
+    fi
+
+    passname="$(printf '%s\n' "${password_files}" | _wofi "${wofi_args[@]}")"
+    wofi_ret=${?}
+
+    printf "%s" "${passname}"
+    return ${wofi_ret}
 }
 
 function get_field_from_menu() {
-    local field
+    local field=""
     local field_count
     local -r passname="${1}"
+    local -r hotkey="${2:-0}"
+
+    if [ "${hotkey}" -eq ${HOTKEY_USERNAME_RET} ]; then
+        field="${PASS_FIELD_USERNAME}"
+    elif [ "${hotkey}" -eq ${HOTKEY_PASSWORD_RET} ]; then
+        field="password"
+    elif [ "${hotkey}" -eq ${HOTKEY_AUTOTYPE_RET} ] && [ ${FLAG_TYPE} -eq 1 ]; then
+        field="autotype"
+    elif [ "${hotkey}" -eq ${HOTKEY_OTP_RET} ]; then
+        field="${FIELD_OTP_TAG}"
+    fi
+
+    if [ -n "${field}" ]; then
+        printf "%s" "${field}"
+        return
+    fi
+
     mapfile -t field_list < <(parse_fields "${passname}")
     field_count=${#field_list[@]}
     readonly field_list
@@ -282,6 +328,8 @@ function output_field() {
 function main() {
     local passname
     local field
+    local hotkey
+    local ret
 
     load_config_file
 
@@ -291,10 +339,16 @@ function main() {
 
     verify_flags
 
-    passname="$(get_passname_from_menu)"
-    [ -n "${passname}" ] || exit
+    ret=0
+    passname="$(get_passname_from_menu)" || ret=${?}
+    if [ ${ret} -eq 0 ] || [ ${ret} -ge 10 ] && [ ${ret} -le 13 ]; then
+        hotkey=${ret}
+    else
+        exit 1
+    fi
+    [ -n "${passname}" ] || exit 1
 
-    field="$(get_field_from_menu "${passname}")"
+    field="$(get_field_from_menu "${passname}" "${hotkey}")"
 
     output_field "${passname}" "${field}"
 }

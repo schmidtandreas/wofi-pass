@@ -42,6 +42,22 @@ test_get_field_mulitfields() {
     local output="$(get_field_from_menu "passname")"
     assert_equals "${fields[${select_field}]}" "${output}" "get field: unexpected output"
 
+    output="$(get_field_from_menu "passname" ${HOTKEY_USERNAME_RET})"
+    assert_equals "username" "${output}" "get field: unexpected hotkey output"
+
+    output="$(get_field_from_menu "passname" ${HOTKEY_PASSWORD_RET})"
+    assert_equals "password" "${output}" "get field: unexpected hotkey output"
+
+    output="$(get_field_from_menu "passname" ${HOTKEY_AUTOTYPE_RET})"
+    assert_equals "${fields[${select_field}]}" "${output}" "get field: unexpected hotkey output"
+
+    FLAG_TYPE=1
+    output="$(get_field_from_menu "passname" ${HOTKEY_AUTOTYPE_RET})"
+    assert_equals "autotype" "${output}" "get field: unexpected hotkey output"
+
+    output="$(get_field_from_menu "passname" ${HOTKEY_OTP_RET})"
+    assert_equals "${FIELD_OTP_TAG}" "${output}" "get field: unexpected hotkey output"
+
     select_field=2
     fake _wofi fake_wofi ${select_field}
     output="$(get_field_from_menu "passname")"

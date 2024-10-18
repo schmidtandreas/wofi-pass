@@ -69,7 +69,7 @@ EOF
 
     FLAG_AUTOTYPE=0
     local expected_autotype=0
-    local expected_array=("password" "${PASS_FIELD_USERNAME}" "OTP")
+    local expected_array=("password" "${PASS_FIELD_USERNAME}" "<<--OTP-->>")
 
     verify_parsed_fields ${expected_autotype} "${expected_array[@]}"
     FLAG_FILEISUSER=1

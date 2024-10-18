@@ -4,6 +4,8 @@ fake_wofi() {
         input+=("${line}")
     done
     echo "${input[${1}]}"
+
+    return ${2:-0}
 }
 
 fake_find() {
@@ -36,8 +38,90 @@ test_passname_change_pass_store_dir() {
     local -r items=("item0" "item1" "item2")
     fake find fake_find "${PASSWORD_STORE_DIR}" "${items[@]}"
     fake _wofi fake_wofi ${select_item}
+
     local output="$(get_passname_from_menu)"
     assert_equals "${items[${select_item}]}" "${output}" "passname: not find valid item"
+}
+
+test_passname_return_hotkey() {
+    local output
+    local ret
+    local -r select_item=1
+    local -r items=("item0" "item1" "item2")
+    fake find fake_find "${HOME}/.password-store" "${items[@]}"
+
+    hotkeys_ret=()
+    hotkeys_ret+=(${HOTKEY_USERNAME_RET})
+    hotkeys_ret+=(${HOTKEY_PASSWORD_RET})
+    hotkeys_ret+=(${HOTKEY_AUTOTYPE_RET})
+    hotkeys_ret+=(${HOTKEY_OTP_RET})
+
+    for hotkey_ret in "${hotkeys_ret[@]}"; do
+        fake _wofi fake_wofi ${select_item} ${hotkey_ret}
+        ret=0
+        output="$(get_passname_from_menu)" || ret=${?}
+        assert_equals "${items[${select_item}]}" "${output}" "passname: not find valid item"
+        assert_equals ${hotkey_ret} ${ret} "passname: return value not expected"
+    done
+}
+
+wofi_args() {
+    echo "${FAKE_PARAMS[@]}"
+}
+
+is_hotkey_set() {
+    local regex=".*key_custom_${2}.*"
+    [[ "${1}" =~ ${regex} ]] && return 0 || return 1
+}
+
+test_passname_hotkey_args() {
+    local result
+    fake find echo ""
+    fake _wofi wofi_args
+    local output="$(get_passname_from_menu)"
+
+    result=true
+    for key in {0..3}; do
+        is_hotkey_set "${output}" "${key}" || result=false
+    done
+    assert ${result} "passname: hotkey argument not found"
+
+    HOTKEY_USERNAME=""
+    output="$(get_passname_from_menu)"
+    result=true
+    is_hotkey_set "${output}" "$((HOTKEY_USERNAME_RET - 10))" && result=false
+    is_hotkey_set "${output}" "$((HOTKEY_PASSWORD_RET - 10))" || result=false
+    is_hotkey_set "${output}" "$((HOTKEY_AUTOTYPE_RET - 10))" || result=false
+    is_hotkey_set "${output}" "$((HOTKEY_OTP_RET - 10))"      || result=false
+    assert ${result} "passname: hotkey argument not found"
+
+    HOTKEY_AUTOTYPE=""
+    output="$(get_passname_from_menu)"
+    result=true
+    is_hotkey_set "${output}" "$((HOTKEY_USERNAME_RET - 10))" && result=false
+    is_hotkey_set "${output}" "$((HOTKEY_PASSWORD_RET - 10))" || result=false
+    is_hotkey_set "${output}" "$((HOTKEY_AUTOTYPE_RET - 10))" && result=false
+    is_hotkey_set "${output}" "$((HOTKEY_OTP_RET - 10))"      || result=false
+    assert ${result} "passname: hotkey argument not found"
+
+    HOTKEY_OTP=""
+    output="$(get_passname_from_menu)"
+    result=true
+    is_hotkey_set "${output}" "$((HOTKEY_USERNAME_RET - 10))" && result=false
+    is_hotkey_set "${output}" "$((HOTKEY_PASSWORD_RET - 10))" || result=false
+    is_hotkey_set "${output}" "$((HOTKEY_AUTOTYPE_RET - 10))" && result=false
+    is_hotkey_set "${output}" "$((HOTKEY_OTP_RET - 10))"      && result=false
+    assert ${result} "passname: hotkey argument not found"
+
+    HOTKEY_PASSWORD=""
+    output="$(get_passname_from_menu)"
+    result=true
+    is_hotkey_set "${output}" "$((HOTKEY_USERNAME_RET - 10))" && result=false
+    is_hotkey_set "${output}" "$((HOTKEY_PASSWORD_RET - 10))" && result=false
+    is_hotkey_set "${output}" "$((HOTKEY_AUTOTYPE_RET - 10))" && result=false
+    is_hotkey_set "${output}" "$((HOTKEY_OTP_RET - 10))"      && result=false
+    assert ${result} "passname: hotkey argument not found"
+
 }
 
 setup_suite() {
