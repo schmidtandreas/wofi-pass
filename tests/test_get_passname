@@ -25,6 +25,22 @@ test_passname_selection() {
     assert_equals "${items[${select_item}]}" "${output}" "passname: not find valid item"
 }
 
+test_passname_selection_case_insensitive() {
+    local -r select_item=1
+    local -r items=("Item0" "iTeM1" "ITEM2")
+
+    FAKE_PARAMS=(-i)
+
+    fake find fake_find "${HOME}/.password-store" "${items[@]}"
+    fake _wofi fake_wofi ${select_item}
+
+    local output="$(get_passname_from_menu "${FAKE_PARAMS[@]}")"
+
+    assert_equals "${items[${select_item}]}" "${output}" "passname: failed to find item in case-insensitive search"
+
+    FAKE_PARAMS=()
+}
+
 test_passname_empty_input() {
     fake find echo ""
     fake _wofi echo ""

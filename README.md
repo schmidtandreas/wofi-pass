@@ -6,8 +6,8 @@ Usage: wofi-pass [options]
 	-a, --autotype		autotype whatever entry is chosen
 	-c, --copy [cmd]	copy to clipboard. Defaults to wl-copy if no cmd is given.
 	-f, --fileisuser	use the name of the password file as username
-	-h, --help		show this help message
-	-i, --ignore-case		enable case insensitive search
+	-h, --help			show this help message
+	-i, --ignore-case	enable case insensitive search
 	-s, --squash		don't show field choice if password file only contains password
 	-t, --type [cmd]	type the selection instead of copying to clipboard.
 				Defaults to wtype if no cmd is given.

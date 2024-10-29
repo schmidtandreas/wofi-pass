@@ -170,7 +170,7 @@ load_config_file () {
 }
 
 function parse_arguments() {
-    OPTS="$(getopt --options ac::fhsti::k --longoptions autotype,copy::,fileisuser,help,squash,type::,nohotkey,ignore-case -n 'wofi-pass' -- "${@}")"
+    OPTS="$(getopt --options ac::fhsti::k --longoptions autotype,copy::,fileisuser,help,squash,type::,nohotkey,insensitive -n 'wofi-pass' -- "${@}")"
     eval set -- "${OPTS}"
     while true; do
         case "${1}" in
@@ -181,7 +181,7 @@ function parse_arguments() {
                 shift 2;;
             -f | --fileisuser) FLAG_FILEISUSER=1; shift;;
             -h | --help) FLAG_HELP=1; shift;;
-            -i | --ignore-case) FLAG_CASE_INSENSITIVE=1; shift;;
+            -i | --insensitive) FLAG_CASE_INSENSITIVE=1; shift;;
             -s | --squash) FLAG_SQUASH=1; shift;;
             -t | --type)
                 FLAG_TYPE=1
@@ -222,7 +222,7 @@ function get_passname_from_menu() {
     # Set up Wofi arguments for dmenu mode and optional case-insensitive search
     wofi_args+=("--show" "dmenu")
     if [ ${FLAG_CASE_INSENSITIVE} -eq 1 ]; then
-        wofi_args+=("-i") # Enable case-insensitive search if the flag is set
+        wofi_args+=("--insensitive")
     fi
     if [ ${FLAG_HOTKEYS_SUPPORTED} -eq 1 ]; then
         [ -n "${HOTKEY_USERNAME}" ] && wofi_args+=("-D" "key_custom_0=${HOTKEY_USERNAME}")

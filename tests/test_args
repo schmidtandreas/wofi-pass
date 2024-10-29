@@ -59,6 +59,10 @@ test_args_help() {
     argument_testing "h" "help" "FLAG_HELP" 1
 }
 
+test_args_insensitive() {
+    argument_testing "i" "insensitive" "FLAG_CASE_INSENSITIVE" 1
+}
+
 test_args_squash() {
     argument_testing "s" "squash" "FLAG_SQUASH" 1
 }
