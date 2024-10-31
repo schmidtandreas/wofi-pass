@@ -220,7 +220,7 @@ function get_passname_from_menu() {
     local wofi_args=()
 
     # Set up Wofi arguments for dmenu mode and optional case-insensitive search
-    wofi_args+=("--show" "dmenu")
+    wofi_args+=("--dmenu")
     if [ ${FLAG_CASE_INSENSITIVE} -eq 1 ]; then
         wofi_args+=("--insensitive")
     fi
