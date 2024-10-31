@@ -19,6 +19,9 @@ Use the name of the password file as username.
 * `-h`, `--help`:
 Show the help message
 
+* `-i`, `--insensitive`:
+Search for password in a case-insensitive way
+
 * `-s`, `--squash`:
 Don't show field choice if password file only contains password.
 
