@@ -25,20 +25,26 @@ test_passname_selection() {
     assert_equals "${items[${select_item}]}" "${output}" "passname: not find valid item"
 }
 
-test_passname_selection_case_insensitive() {
-    local -r select_item=1
-    local -r items=("Item0" "iTeM1" "ITEM2")
+is_arg_set() {
+    local regex=".*--${2}.*"
+    [[ "${1}" =~ ${regex} ]] && return 0 || return 1
+}
 
-    FAKE_PARAMS=(-i)
+test_passname_case_insensetive_args() {
+    local result
+    fake find echo ""
+    fake _wofi wofi_args
+    local output="$(get_passname_from_menu)"
 
-    fake find fake_find "${HOME}/.password-store" "${items[@]}"
-    fake _wofi fake_wofi ${select_item}
+    result=true
+    is_arg_set "${output}" "insensitive" && result=false
+    assert ${result} "passname: wofi argument insensitive was unexpected passed"
 
-    local output="$(get_passname_from_menu "${FAKE_PARAMS[@]}")"
-
-    assert_equals "${items[${select_item}]}" "${output}" "passname: failed to find item in case-insensitive search"
-
-    FAKE_PARAMS=()
+    FLAG_CASE_INSENSITIVE=1
+    output="$(get_passname_from_menu)"
+    result=false
+    is_arg_set "${output}" "insensitive" && result=true
+    assert ${result} "passname: wofi argument insensitive not found"
 }
 
 test_passname_empty_input() {
