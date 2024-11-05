@@ -170,7 +170,7 @@ load_config_file () {
 }
 
 function parse_arguments() {
-    OPTS="$(getopt --options ac::fhsti::k --longoptions autotype,copy::,fileisuser,help,squash,type::,nohotkey,insensitive -n 'wofi-pass' -- "${@}")"
+    OPTS="$(getopt --options ac::fhsit::k --longoptions autotype,copy::,fileisuser,help,squash,type::,nohotkey,insensitive -n 'wofi-pass' -- "${@}")"
     eval set -- "${OPTS}"
     while true; do
         case "${1}" in
