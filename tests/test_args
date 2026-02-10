@@ -6,7 +6,7 @@ argument_testing() {
     local -r cmd_arg="${5:-""}"
     local init_value=0
 
-    flags=("FLAG_AUTOTYPE" "FLAG_COPY" "FLAG_FILEISUSER" "FLAG_HELP" "FLAG_SQUASH" "FLAG_TYPE" "FLAG_HOTKEYS_SUPPORTED")
+    flags=("FLAG_AUTOTYPE" "FLAG_COPY" "FLAG_FILEISUSER" "FLAG_HELP" "FLAG_CASE_INSENSITIVE" "FLAG_SQUASH" "FLAG_TYPE" "FLAG_HOTKEYS_SUPPORTED")
 
     [ ${expected_value} -eq 0 ] && init_value=1
 
