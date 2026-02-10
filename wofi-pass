@@ -35,11 +35,13 @@ HOTKEY_OTP_RET=13
 
 FIELD_OTP_TAG="<<--OTP-->>"
 
-function _wofi() {
+function _wofi()
+{
     wofi "${@}"
 }
 
-function _pass() {
+function _pass()
+{
     if [ -n "${PASSWORD_STORE_DIR:-""}" ]; then
         PASSWORD_STORE_DIR="${PASSWORD_STORE_DIR}" pass "${@}"
     else
@@ -47,7 +49,8 @@ function _pass() {
     fi
 }
 
-function _trim() {
+function _trim()
+{
     local var="${*}"
     # remove leading whitespace characters
     var="${var#"${var%%[![:space:]]*}"}"
@@ -56,16 +59,21 @@ function _trim() {
     printf '%s' "${var}"
 }
 
-function generate_otp() {
+function generate_otp()
+{
     local -r passname="${1}"
-    pass otp "${passname}" | tail -n1 | { IFS= read -r pass; printf %s "${pass}"; }
+    pass otp "${passname}" | tail -n1 | {
+        IFS= read -r pass
+        printf %s "${pass}"
+    }
 }
 
-function parse_fields() {
+function parse_fields()
+{
     local field_list
     local has_username=0
     local -r passname="${1}"
-    mapfile -t entries < <(_pass show "${passname}" | tail -n +2 )
+    mapfile -t entries < <(_pass show "${passname}" | tail -n +2)
     local line=""
     local fields=()
 
@@ -81,20 +89,20 @@ function parse_fields() {
     field_list+=("password")
     if [ ${FLAG_FILEISUSER} -eq 1 ]; then
         has_username=1
-        field_list+=( "${PASS_FIELD_USERNAME}" )
+        field_list+=("${PASS_FIELD_USERNAME}")
     fi
     for line in "${fields[@]}"; do
         if [ "${line}" = "${PASS_FIELD_USERNAME}" ]; then
             if [ ${has_username} -eq 0 ]; then
                 has_username=1
-                field_list+=( "${line}" )
+                field_list+=("${line}")
             fi
         elif [ "${line}" = "otpauth" ]; then
-            field_list+=( "${FIELD_OTP_TAG}" )
+            field_list+=("${FIELD_OTP_TAG}")
         elif [ "${line}" = "autotype_always" ]; then
             FLAG_AUTOTYPE=1
         else
-            field_list+=( "${line}" )
+            field_list+=("${line}")
         fi
     done
 
@@ -105,17 +113,22 @@ function parse_fields() {
     printf "%s\n" "${field_list[@]}"
 }
 
-function pass_field() {
+function pass_field()
+{
     local -r passname="${1}"
     shift
     _trim "$(_pass show "${passname}" | tail -n+2 | grep "^${*}:.*$" | cut -d: -f1 -s --complement)"
 }
 
-function pass_get() {
+function pass_get()
+{
     local -r passname="${1}"
     local -r field="${2}"
     if [ "${field}" = "password" ]; then
-        _pass show "${passname}" | { IFS= read -r pass; printf %s "${pass}"; }
+        _pass show "${passname}" | {
+            IFS= read -r pass
+            printf %s "${pass}"
+        }
     elif [ "${field}" = "${FIELD_OTP_TAG}" ]; then
         generate_otp "${passname}"
     elif [ ${FLAG_FILEISUSER} -eq 1 ] && [ "${field}" = "${PASS_FIELD_USERNAME}" ]; then
@@ -125,8 +138,9 @@ function pass_get() {
     fi
 }
 
-function usage() {
-    cat <<EOF
+function usage()
+{
+    cat << EOF
     Usage:
     wofi-pass [options]
 
@@ -144,13 +158,14 @@ function usage() {
 EOF
 }
 
-get_config_file () {
+get_config_file()
+{
     local config_base_dir="${XDG_CONFIG_HOME:-"${HOME}/.config"}"
     readonly config_base_dir
 
     config_files=("${WOFI_PASS_CONFIG:-""}"
-                  "${config_base_dir}/wofi-pass/config"
-                  "/etc/wofi-pass.conf")
+        "${config_base_dir}/wofi-pass/config"
+        "/etc/wofi-pass.conf")
 
     # return the first config file with a valid path
     for config in "${config_files[@]}"; do
@@ -161,7 +176,8 @@ get_config_file () {
     done
 }
 
-load_config_file () {
+load_config_file()
+{
     config_file="$(get_config_file)"
     if [[ -n "${config_file}" ]]; then
         #shellcheck source=wofi-pass.conf
@@ -169,39 +185,65 @@ load_config_file () {
     fi
 }
 
-function parse_arguments() {
+function parse_arguments()
+{
     OPTS="$(getopt --options ac::fhsit::k --longoptions autotype,copy::,fileisuser,help,squash,type::,nohotkey,insensitive -n 'wofi-pass' -- "${@}")"
     eval set -- "${OPTS}"
     while true; do
         case "${1}" in
-            -a | --autotype) FLAG_AUTOTYPE=1; shift;;
+            -a | --autotype)
+                FLAG_AUTOTYPE=1
+                shift
+                ;;
             -c | --copy)
                 FLAG_COPY=1
                 [ -n "${2}" ] && CMD_COPY="${2}"
-                shift 2;;
-            -f | --fileisuser) FLAG_FILEISUSER=1; shift;;
-            -h | --help) FLAG_HELP=1; shift;;
-            -i | --insensitive) FLAG_CASE_INSENSITIVE=1; shift;;
-            -s | --squash) FLAG_SQUASH=1; shift;;
+                shift 2
+                ;;
+            -f | --fileisuser)
+                FLAG_FILEISUSER=1
+                shift
+                ;;
+            -h | --help)
+                FLAG_HELP=1
+                shift
+                ;;
+            -i | --insensitive)
+                FLAG_CASE_INSENSITIVE=1
+                shift
+                ;;
+            -s | --squash)
+                FLAG_SQUASH=1
+                shift
+                ;;
             -t | --type)
                 FLAG_TYPE=1
                 [ -n "${2}" ] && CMD_TYPE="${2}"
-                shift 2;;
-            -k | --nohotkey) FLAG_HOTKEYS_SUPPORTED=0; shift;;
-            --) shift; break;;
-            *) break;;
-      esac
+                shift 2
+                ;;
+            -k | --nohotkey)
+                FLAG_HOTKEYS_SUPPORTED=0
+                shift
+                ;;
+            --)
+                shift
+                break
+                ;;
+            *) break ;;
+        esac
     done
 }
 
-function exit_if_help_flag_set() {
+function exit_if_help_flag_set()
+{
     if [ ${FLAG_HELP} -eq 1 ]; then
         usage >&2
         exit 0
     fi
 }
 
-function verify_flags() {
+function verify_flags()
+{
     if [ ${FLAG_TYPE} -eq 1 ] && [ ${FLAG_COPY} -eq 1 ]; then
         printf "copy and type cannot be used at same time. Please pass only one.\n" >&2
         exit 1
@@ -210,7 +252,8 @@ function verify_flags() {
     fi
 }
 
-function get_passname_from_menu() {
+function get_passname_from_menu()
+{
     local -r pass_dir="${PASSWORD_STORE_DIR:-${HOME}/.password-store}"
     local password_files
     password_files="$(find "${pass_dir}" -name "*.gpg" | sed "s|^${pass_dir}\/\(.*\)\.gpg$|\1|" | sort)"
@@ -237,7 +280,8 @@ function get_passname_from_menu() {
     return ${wofi_ret}
 }
 
-function get_field_from_menu() {
+function get_field_from_menu()
+{
     local field=""
     local field_count
     local -r passname="${1}"
@@ -270,7 +314,8 @@ function get_field_from_menu() {
     fi
 }
 
-function get_output_cmd() {
+function get_output_cmd()
+{
     if [ ${FLAG_TYPE} -eq 1 ]; then
         printf "%s" "${CMD_TYPE}"
     else
@@ -278,12 +323,14 @@ function get_output_cmd() {
     fi
 }
 
-function press_key() {
+function press_key()
+{
     local -r key="${1}"
     wtype -P "${key}" -p "${key}"
 }
 
-function output_autotype() {
+function output_autotype()
+{
     local -r passname="${1}"
     local -r cmd_output="${2}"
     local password
@@ -297,21 +344,22 @@ function output_autotype() {
 
     for word in ${autotype}; do
         case "${word}" in
-            ":tab") [ ${FLAG_TYPE} -eq 1 ] && press_key "Tab" || printf "\t";;
-            ":space") [ ${FLAG_TYPE} -eq 1 ] && press_key "space" || printf " ";;
-            ":enter") [ ${FLAG_TYPE} -eq 1 ] && press_key "Return" || printf "\n";;
-            ":delay") [ ${FLAG_TYPE} -eq 1 ] && sleep "${WOFI_PASS_DELAY}";;
-            ":otp") printf "%s" "$(generate_otp "${passname}")" | ${cmd_output};;
-            ":password") printf "%s" "${password}" | ${cmd_output};;
-            ":username") printf "%s" "$(pass_get "${passname}" "${PASS_FIELD_USERNAME}")" | ${cmd_output};;
-            ":path") printf "%s" "${passname##*/}" | ${cmd_output};;
-            *) printf "%s" "$(pass_get "${passname}" "${word}")" | ${cmd_output}
+            ":tab") [ ${FLAG_TYPE} -eq 1 ] && press_key "Tab" || printf "\t" ;;
+            ":space") [ ${FLAG_TYPE} -eq 1 ] && press_key "space" || printf " " ;;
+            ":enter") [ ${FLAG_TYPE} -eq 1 ] && press_key "Return" || printf "\n" ;;
+            ":delay") [ ${FLAG_TYPE} -eq 1 ] && sleep "${WOFI_PASS_DELAY}" ;;
+            ":otp") printf "%s" "$(generate_otp "${passname}")" | "${cmd_output}" ;;
+            ":password") printf "%s" "${password}" | ${cmd_output} ;;
+            ":username") printf "%s" "$(pass_get "${passname}" "${PASS_FIELD_USERNAME}")" | ${cmd_output} ;;
+            ":path") printf "%s" "${passname##*/}" | ${cmd_output} ;;
+            *) printf "%s" "$(pass_get "${passname}" "${word}")" | ${cmd_output} ;;
         esac
     done
     [[ "${WOFI_PASS_AUTO_ENTER}" != "false" ]] && press_key "Return"
 }
 
-function output_field() {
+function output_field()
+{
     local cmd_output
     local -r passname="${1}"
     local -r field="${2}"
@@ -330,7 +378,8 @@ function output_field() {
     fi
 }
 
-function main() {
+function main()
+{
     local passname
     local field
     local hotkey
