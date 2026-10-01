@@ -197,8 +197,12 @@ function parse_arguments()
                 ;;
             -c | --copy)
                 FLAG_COPY=1
-                [ -n "${2}" ] && CMD_COPY="${2}"
-                shift 2
+                if [ -n "${2}" ]; then
+                    CMD_COPY="${2}"
+                    shift 2
+                else
+                    shift
+                fi
                 ;;
             -f | --fileisuser)
                 FLAG_FILEISUSER=1
@@ -218,8 +222,12 @@ function parse_arguments()
                 ;;
             -t | --type)
                 FLAG_TYPE=1
-                [ -n "${2}" ] && CMD_TYPE="${2}"
-                shift 2
+                if [ -n "${2}" ]; then
+                    CMD_TYPE="${2}"
+                    shift 2
+                else
+                    shift
+                fi
                 ;;
             -k | --nohotkey)
                 FLAG_HOTKEYS_SUPPORTED=0
