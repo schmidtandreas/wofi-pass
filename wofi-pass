@@ -264,7 +264,7 @@ function get_passname_from_menu()
 {
     local -r pass_dir="${PASSWORD_STORE_DIR:-${HOME}/.password-store}"
     local password_files
-    password_files="$(find "${pass_dir}" -name "*.gpg" | sed "s|^${pass_dir}\/\(.*\)\.gpg$|\1|" | sort)"
+    password_files="$(find -L "${pass_dir}" -name "*.gpg" | sed "s|^${pass_dir}\/\(.*\)\.gpg$|\1|" | sort)"
     readonly password_files
     local passname
     local wofi_ret
