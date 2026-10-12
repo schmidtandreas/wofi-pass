@@ -51,6 +51,24 @@ test_args_copy() {
     argument_testing "c" "copy" "FLAG_COPY" 1 "new-copy-cmd"
 }
 
+test_args_clear() {
+    WOFI_PASS_CLIP_TIME=0
+    parse_arguments "-C"
+    assert_equals "${WOFI_PASS_CLIP_TIME_DEFAULT}" "${WOFI_PASS_CLIP_TIME}" "args: -C did not set default clip time"
+
+    WOFI_PASS_CLIP_TIME=0
+    parse_arguments "-C10"
+    assert_equals 10 "${WOFI_PASS_CLIP_TIME}" "args: -C10 did not set clip time"
+
+    WOFI_PASS_CLIP_TIME=0
+    parse_arguments "--clear"
+    assert_equals "${WOFI_PASS_CLIP_TIME_DEFAULT}" "${WOFI_PASS_CLIP_TIME}" "args: --clear did not set default clip time"
+
+    WOFI_PASS_CLIP_TIME=0
+    parse_arguments "--clear=20"
+    assert_equals 20 "${WOFI_PASS_CLIP_TIME}" "args: --clear=20 did not set clip time"
+}
+
 test_args_fileisuser() {
     argument_testing "f" "fileisuser" "FLAG_FILEISUSER" 1
 }

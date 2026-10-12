@@ -1,0 +1,62 @@
+setup() {
+    CLIP_FILE="$(mktemp)"
+    CMD_COPY="tee ${CLIP_FILE}"
+    CMD_PASTE="cat ${CLIP_FILE}"
+    CMD_CLEAR="truncate -s 0 ${CLIP_FILE}"
+    FLAG_TYPE=0
+    WOFI_PASS_CLIP_TIME=1
+}
+
+teardown() {
+    rm -f "${CLIP_FILE}"
+}
+
+wait_for_clear_job() {
+    sleep 2
+}
+
+test_clipboard_clear_disabled_by_default() {
+    WOFI_PASS_CLIP_TIME=0
+    printf "secret" > "${CLIP_FILE}"
+    schedule_clipboard_clear
+    wait_for_clear_job
+    assert_equals "secret" "$(cat "${CLIP_FILE}")" "clipboard clear: cleared although disabled"
+}
+
+test_clipboard_clear_after_timeout() {
+    printf "secret" > "${CLIP_FILE}"
+    schedule_clipboard_clear
+    assert_equals "secret" "$(cat "${CLIP_FILE}")" "clipboard clear: cleared before timeout"
+    wait_for_clear_job
+    assert_equals "" "$(cat "${CLIP_FILE}")" "clipboard clear: not cleared after timeout"
+}
+
+test_clipboard_clear_keeps_newer_content() {
+    printf "secret" > "${CLIP_FILE}"
+    schedule_clipboard_clear
+    printf "something else" > "${CLIP_FILE}"
+    wait_for_clear_job
+    assert_equals "something else" "$(cat "${CLIP_FILE}")" "clipboard clear: newer clipboard content was cleared"
+}
+
+test_clipboard_clear_without_paste_cmd() {
+    CMD_PASTE=""
+    printf "secret" > "${CLIP_FILE}"
+    schedule_clipboard_clear
+    printf "something else" > "${CLIP_FILE}"
+    wait_for_clear_job
+    assert_equals "" "$(cat "${CLIP_FILE}")" "clipboard clear: not cleared without paste command"
+}
+
+test_clipboard_clear_not_in_type_mode() {
+    FLAG_TYPE=1
+    printf "secret" > "${CLIP_FILE}"
+    schedule_clipboard_clear
+    wait_for_clear_job
+    assert_equals "secret" "$(cat "${CLIP_FILE}")" "clipboard clear: cleared in type mode"
+}
+
+setup_suite() {
+    WOFI_PASS_TESTING=1
+    source ../wofi-pass
+}

@@ -13,6 +13,9 @@ Autotype whatever entry is chosen\.
 \fB\-c\fR, \fB\-\-copy\fR [\fIcmd\fR]
 Copy to clipboard\. Defaults to \fBwl\-copy\fR if no \fIcmd\fR is given\.
 .TP
+\fB\-C\fR, \fB\-\-clear\fR [\fIsec\fR]
+Clear the clipboard after \fIsec\fR seconds\. Defaults to \fB45\fR if no \fIsec\fR is given\. The clipboard is only cleared if it still contains the copied value\. Has no effect in type mode\. See also \fBWOFI_PASS_CLIP_TIME\fR\.
+.TP
 \fB\-f\fR, \fB\-\-fileisuser\fR
 Use the name of the password file as username\.
 .TP
@@ -46,6 +49,9 @@ The following variables can be redefined in configuration file\.
 .TP
 \fBPASSWORD_STORE_DIR\fR
 Path to the pass storage files\. Default: \fB${HOME}/\.password\-store\fR
+.TP
+\fBWOFI_PASS_CLIP_TIME\fR
+Time in seconds after which the clipboard is cleared\. \fB0\fR disables clearing\. Default: \fB0\fR
 .SS "COMMANDS"
 .TP
 \fBCMD_COPY\fR
@@ -53,6 +59,12 @@ Command to redirect the output to the clipboard\. Default: \fBwl\-copy\fR
 .TP
 \fBCMD_TYPE\fR
 Command to type the output\. Default: \fBwcopy \-\fR
+.TP
+\fBCMD_CLEAR\fR
+Command to clear the clipboard\. Default: \fBwl\-copy \-\-clear\fR
+.TP
+\fBCMD_PASTE\fR
+Command to read the clipboard\. It is used to avoid clearing content copied in the meantime\. If empty, the clipboard is always cleared after the timeout\. Default: \fBwl\-paste \-\-no\-newline\fR
 .SS "PASS FIELDS"
 .TP
 \fBPASS_FIELD_USERNAME\fR

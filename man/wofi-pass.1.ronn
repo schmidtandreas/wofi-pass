@@ -13,6 +13,11 @@ Autotype whatever entry is chosen.
 * `-c`, `--copy` [<cmd>]:
 Copy to clipboard. Defaults to `wl-copy` if no <cmd> is given.
 
+* `-C`, `--clear` [<sec>]:
+Clear the clipboard after <sec> seconds. Defaults to `45` if no <sec> is given.
+The clipboard is only cleared if it still contains the copied value.
+Has no effect in type mode. See also `WOFI_PASS_CLIP_TIME`.
+
 * `-f`, `--fileisuser`:
 Use the name of the password file as username.
 
@@ -62,6 +67,9 @@ The following variables can be redefined in configuration file.
 * `PASSWORD_STORE_DIR` :
 Path to the pass storage files. Default: `${HOME}/.password-store`
 
+* `WOFI_PASS_CLIP_TIME` :
+Time in seconds after which the clipboard is cleared. `0` disables clearing. Default: `0`
+
 ### COMMANDS
 
 * `CMD_COPY` :
@@ -69,6 +77,13 @@ Command to redirect the output to the clipboard. Default: `wl-copy`
 
 * `CMD_TYPE` :
 Command to type the output. Default: `wcopy -`
+
+* `CMD_CLEAR` :
+Command to clear the clipboard. Default: `wl-copy --clear`
+
+* `CMD_PASTE` :
+Command to read the clipboard. It is used to avoid clearing content copied in the meantime.
+If empty, the clipboard is always cleared after the timeout. Default: `wl-paste --no-newline`
 
 ### PASS FIELDS
 

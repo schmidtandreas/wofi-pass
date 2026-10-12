@@ -5,6 +5,8 @@
 Usage: wofi-pass [options]
 	-a, --autotype		autotype whatever entry is chosen
 	-c, --copy [cmd]	copy to clipboard. Defaults to wl-copy if no cmd is given.
+	-C, --clear [sec]	clear the clipboard after sec seconds.
+				Defaults to 45 seconds if no sec is given.
 	-f, --fileisuser	use the name of the password file as username
 	-h, --help		show this help message
 	-i, --insensitive	enable case insensitive search
@@ -45,6 +47,12 @@ the field choice dialogue when there is only a password in the file.
 
 The `-t | --type` flag tells `wofi-pass` to type the choice
 instead of copying to clipboard.
+
+The `-C | --clear` flag tells `wofi-pass` to clear the clipboard
+after the given number of seconds (default 45). Alternatively set
+`WOFI_PASS_CLIP_TIME` in the configuration file. The clipboard is only
+cleared if it still contains the copied value. Clipboard history managers
+may still keep a copy of the value.
 
 An entry can be marked with `autotype_always` and
 is thus always automatically output as autotype.

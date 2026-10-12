@@ -37,6 +37,20 @@ test_flags_no_type_copy() {
     assert verify_flags "verify flags: verify_flags return error"
 }
 
+test_flags_clip_time() {
+    FLAG_COPY=1
+    FLAG_TYPE=0
+
+    WOFI_PASS_CLIP_TIME=0
+    assert verify_flags "verify flags: clip time 0 rejected"
+    WOFI_PASS_CLIP_TIME=30
+    assert verify_flags "verify flags: clip time 30 rejected"
+    WOFI_PASS_CLIP_TIME="abc"
+    assert_fail "verify_flags 2>/dev/null" "verify flags: invalid clip time accepted"
+    WOFI_PASS_CLIP_TIME="-5"
+    assert_fail "verify_flags 2>/dev/null" "verify flags: negative clip time accepted"
+}
+
 setup_suite() {
         WOFI_PASS_TESTING="1"
             source ../wofi-pass

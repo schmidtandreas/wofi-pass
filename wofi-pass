@@ -16,6 +16,8 @@ FLAG_CASE_INSENSITIVE=0
 
 CMD_COPY="${CMD_COPY:-"wl-copy"}"
 CMD_TYPE="${CMD_TYPE:-"wtype -"}"
+CMD_CLEAR="${CMD_CLEAR:-"wl-copy --clear"}"
+CMD_PASTE="${CMD_PASTE:-"wl-paste --no-newline"}"
 
 # We expect to find these fields in pass(1)'s output
 PASS_FIELD_USERNAME="${PASS_FIELD_USERNAME:-"username"}"
@@ -23,6 +25,9 @@ PASS_FIELD_USERNAME="${PASS_FIELD_USERNAME:-"username"}"
 WOFI_PASS_AUTOTYPE="${WOFI_PASS_AUTOTYPE:-":username :tab :password"}"
 WOFI_PASS_DELAY=${WOFI_PASS_DELAY:-2}
 WOFI_PASS_AUTO_ENTER="${WOFI_PASS_AUTO_ENTER:-"false"}"
+# seconds after which the clipboard is cleared, 0 disables clearing
+WOFI_PASS_CLIP_TIME="${WOFI_PASS_CLIP_TIME:-0}"
+WOFI_PASS_CLIP_TIME_DEFAULT=45
 
 HOTKEY_USERNAME="Alt-u"
 HOTKEY_PASSWORD="Alt-p"
@@ -147,6 +152,8 @@ function usage()
     Options:
         -a, --autotype    autotype whatever entry is chosen
         -c, --copy=[cmd]  copy to clipboard. Defaults to wl-copy if no cmd is given.
+        -C, --clear=[sec] clear the clipboard after sec seconds.
+                          Defaults to ${WOFI_PASS_CLIP_TIME_DEFAULT} seconds if no sec is given.
         -f, --fileisuser  use the name of the password file as username
         -h, --help        show this help message
         -s, --squash      don't show field choice if password file only contains password
@@ -187,7 +194,7 @@ load_config_file()
 
 function parse_arguments()
 {
-    OPTS="$(getopt --options ac::fhsit::k --longoptions autotype,copy::,fileisuser,help,squash,type::,nohotkey,insensitive -n 'wofi-pass' -- "${@}")"
+    OPTS="$(getopt --options ac::C::fhsit::k --longoptions autotype,copy::,clear::,fileisuser,help,squash,type::,nohotkey,insensitive -n 'wofi-pass' -- "${@}")"
     eval set -- "${OPTS}"
     while true; do
         case "${1}" in
@@ -201,6 +208,15 @@ function parse_arguments()
                     CMD_COPY="${2}"
                     shift 2
                 else
+                    shift
+                fi
+                ;;
+            -C | --clear)
+                if [ -n "${2}" ] && [[ "${2}" != -* ]]; then
+                    WOFI_PASS_CLIP_TIME="${2}"
+                    shift 2
+                else
+                    WOFI_PASS_CLIP_TIME="${WOFI_PASS_CLIP_TIME_DEFAULT}"
                     shift
                 fi
                 ;;
@@ -257,6 +273,10 @@ function verify_flags()
         exit 1
     elif [ ${FLAG_TYPE} -eq 0 ] && [ ${FLAG_COPY} -eq 0 ]; then
         printf "neither -c/--copy or -t/--type passed. Defaulting to copying with %s.\n" "${CMD_COPY}" >&2
+    fi
+    if ! [[ "${WOFI_PASS_CLIP_TIME}" =~ ^[0-9]+$ ]]; then
+        printf "invalid clipboard clear time \"%s\". Please pass a number of seconds.\n" "${WOFI_PASS_CLIP_TIME}" >&2
+        exit 1
     fi
 }
 
@@ -386,6 +406,39 @@ function output_field()
     fi
 }
 
+function clipboard_hash()
+{
+    ${CMD_PASTE} 2> /dev/null | sha256sum
+}
+
+function clear_clipboard_after_timeout()
+{
+    local -r hash="${1}"
+    sleep "${WOFI_PASS_CLIP_TIME}"
+    # don't clear the clipboard if something else was copied meanwhile
+    if [ -n "${CMD_PASTE}" ] && [ "$(clipboard_hash)" != "${hash}" ]; then
+        return 0
+    fi
+    ${CMD_CLEAR}
+}
+
+function schedule_clipboard_clear()
+{
+    local hash=""
+
+    [ ${FLAG_TYPE} -eq 0 ] && [ "${WOFI_PASS_CLIP_TIME}" -gt 0 ] || return 0
+
+    # store only a hash of the copied value, never the secret itself
+    [ -n "${CMD_PASTE}" ] && hash="$(clipboard_hash)"
+
+    # detach from the caller and survive a closing terminal
+    (
+        trap '' HUP
+        clear_clipboard_after_timeout "${hash}"
+    ) < /dev/null > /dev/null 2>&1 &
+    disown
+}
+
 function main()
 {
     local passname
@@ -413,6 +466,8 @@ function main()
     field="$(get_field_from_menu "${passname}" "${hotkey}")"
 
     output_field "${passname}" "${field}"
+
+    schedule_clipboard_clear
 }
 
 if [[ -z "${WOFI_PASS_TESTING:-""}" ]]; then
