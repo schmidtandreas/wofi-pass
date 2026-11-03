@@ -146,6 +146,106 @@ test_passname_hotkey_args() {
 
 }
 
+preselection_menu() {
+    printf "%s\n" "${FAKE_PARAMS[@]}"
+    cat
+}
+
+test_passname_preselect_unique_autotype() {
+    fake find fake_find "${HOME}/.password-store" "personal/gitlab" "work/github"
+    fake _wofi echo "UNEXPECTED MENU"
+    FLAG_AUTOTYPE=1
+    WOFI_PASS_PRESELECT="github"
+    local output
+    output="$(get_passname_from_menu)"
+    assert_equals "work/github" "${output}"
+    WOFI_PASS_PRESELECT="work/git"
+    output="$(get_passname_from_menu)"
+    assert_equals "work/github" "${output}"
+}
+
+test_passname_preselect_case_insensitive() {
+    fake find fake_find "${HOME}/.password-store" "work/GitHub"
+    fake _wofi preselection_menu
+    FLAG_HOTKEYS_SUPPORTED=0
+    FLAG_AUTOTYPE=1
+    WOFI_PASS_PRESELECT="github"
+    local output
+    output="$(get_passname_from_menu)"
+    assert_equals $'--dmenu\n--search\ngithub\nwork/GitHub' "${output}"
+    FLAG_CASE_INSENSITIVE=1
+    output="$(get_passname_from_menu)"
+    assert_equals "work/GitHub" "${output}"
+}
+
+test_passname_preselect_directory() {
+    fake find fake_find "${HOME}/.password-store" "work/github"
+    fake _wofi preselection_menu
+    FLAG_HOTKEYS_SUPPORTED=0
+    FLAG_AUTOTYPE=1
+    WOFI_PASS_PRESELECT="work"
+    local output
+    output="$(get_passname_from_menu)"
+    assert_equals $'--dmenu\n--search\nwork\nwork/github' "${output}"
+    WOFI_PASS_PRESELECT="work/"
+    output="$(get_passname_from_menu)"
+    assert_equals $'--dmenu\n--search\nwork/\nwork/github' "${output}"
+}
+
+test_passname_preselect_ambiguous_or_missing() {
+    fake find fake_find "${HOME}/.password-store" "personal/github" "work/github"
+    fake _wofi preselection_menu
+    FLAG_HOTKEYS_SUPPORTED=0
+    FLAG_AUTOTYPE=1
+    WOFI_PASS_PRESELECT="github"
+    local output
+    output="$(get_passname_from_menu)"
+    assert_equals $'--dmenu\n--search\ngithub\npersonal/github\nwork/github' "${output}"
+    WOFI_PASS_PRESELECT="missing"
+    output="$(get_passname_from_menu)"
+    assert_equals $'--dmenu\n--search\nmissing\npersonal/github\nwork/github' "${output}"
+}
+
+test_passname_preselect_without_autotype() {
+    fake find fake_find "${HOME}/.password-store" "work/github"
+    fake _wofi preselection_menu
+    FLAG_HOTKEYS_SUPPORTED=0
+    WOFI_PASS_PRESELECT="github"
+    local output
+    output="$(get_passname_from_menu)"
+    assert_equals $'--dmenu\n--search\nwork/github\nwork/github' "${output}"
+}
+
+test_passname_preselect_literal() {
+    fake find fake_find "${HOME}/.password-store" "account[1]" "account1"
+    fake _wofi echo "UNEXPECTED MENU"
+    FLAG_AUTOTYPE=1
+    WOFI_PASS_PRESELECT="[1]"
+    local output
+    output="$(get_passname_from_menu)"
+    assert_equals "account[1]" "${output}"
+}
+
+preselected_autotype_output() {
+    printf "%s|%s" "${FAKE_PARAMS[0]}" "${FAKE_PARAMS[2]}"
+}
+
+test_preselect_autotype_without_menus() {
+    fake get_config_file echo ""
+    fake find fake_find "${HOME}/.password-store" "work/github"
+    fake _wofi echo "UNEXPECTED MENU"
+    fake _pass <<EOF
+paSSw0rd
+username: user
+EOF
+    fake output_autotype preselected_autotype_output
+    WOFI_PASS_AUTOTYPE_1=":password"
+    WOFI_PASS_AUTOTYPE_1_ALIAS="login"
+    local output
+    output="$(main -t --autotype=login --preselect=github)"
+    assert_equals "work/github|:password" "${output}"
+}
+
 setup_suite() {
     WOFI_PASS_TESTING="1"
     source ../wofi-pass

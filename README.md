@@ -8,6 +8,7 @@ Usage: wofi-pass [options]
 	-f, --fileisuser	use the name of the password file as username
 	-h, --help		show this help message
 	-i, --insensitive	enable case insensitive search
+	-p, --preselect=text	preselect an entry or directory; autotype a unique match
 	-s, --squash		don't show field choice if password file only contains password
 	-t, --type [cmd]	type the selection instead of copying to clipboard.
 				Defaults to wtype if no cmd is given.
@@ -48,6 +49,22 @@ instead of copying to clipboard.
 
 An entry can be marked with `autotype_always` and
 is thus always automatically output as autotype.
+
+### Preselection
+
+Use `wofi-pass -t --autotype=default --preselect=github` to immediately output
+the only entry whose path contains `github`, without opening either menu.
+Matching is a literal substring search and honors `-i` / `--insensitive`.
+
+Without `--autotype`, a unique entry match opens the entry menu with the
+matched entry's full path prefilled, so that entry is preselected for confirmation.
+If several entries match, no entry matches, or the text matches only a directory
+portion of the path, the menu opens with the original search text prefilled.
+Directory-only matches still require a selection even when the directory has
+only one entry.
+
+Use `-p TEXT` or `--preselect=TEXT`. `WOFI_PASS_PRESELECT` can also set the
+search via the environment or config file; the command-line option overrides it.
 
 ## Configuration
 

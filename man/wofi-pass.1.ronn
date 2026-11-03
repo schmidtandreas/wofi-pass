@@ -23,6 +23,16 @@ Show the help message
 * `-i`, `--insensitive`:
 Search for password in a case-insensitive way
 
+* `-p`, `--preselect`=<text>:
+Preselect an entry or directory using a literal partial entry-path match.
+With `--autotype`, a unique entry match is output immediately without either menu.
+Without `--autotype`, the entry menu opens with the matched entry's full path
+prefilled for confirmation. Matching honors `--insensitive`.
+Multiple matches, no matches, and directory-only matches open the menu with
+the original search text prefilled. Directory-only matches require selection
+even if only one entry exists in the directory.
+The option overrides `WOFI_PASS_PRESELECT` from the environment or configuration.
+
 * `-s`, `--squash`:
 Don't show field choice if password file only contains password.
 
@@ -62,6 +72,9 @@ The following variables can be redefined in configuration file.
 
 * `PASSWORD_STORE_DIR` :
 Path to the pass storage files. Default: `${HOME}/.password-store`
+
+* `WOFI_PASS_PRESELECT` :
+Initial entry search. Default: empty (no preselection). See `--preselect`.
 
 ### COMMANDS
 

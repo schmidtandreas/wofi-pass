@@ -19,6 +19,9 @@ Use the name of the password file as username\.
 \fB\-h\fR, \fB\-\-help\fR
 Show the help message
 .TP
+\fB\-p\fR, \fB\-\-preselect\fR=\fItext\fR
+Preselect an entry or directory using a literal partial entry-path match\. With \fB\-\-autotype\fR, a unique entry match is output immediately without either menu\. Without \fB\-\-autotype\fR, the entry menu opens with the matched entry's full path prefilled for confirmation\. Matching honors \fB\-\-insensitive\fR\. Multiple matches, no matches, and directory-only matches open the menu with the original search text prefilled\. Directory-only matches require selection even if only one entry exists in the directory\. The option overrides \fBWOFI_PASS_PRESELECT\fR from the environment or configuration\.
+.TP
 \fB\-s\fR, \fB\-\-squash\fR
 Don't show field choice if password file only contains password\.
 .TP
@@ -46,6 +49,9 @@ The following variables can be redefined in configuration file\.
 .TP
 \fBPASSWORD_STORE_DIR\fR
 Path to the pass storage files\. Default: \fB${HOME}/\.password\-store\fR
+.TP
+\fBWOFI_PASS_PRESELECT\fR
+Initial entry search\. Default: empty (no preselection)\. See \fB\-\-preselect\fR\.
 .SS "COMMANDS"
 .TP
 \fBCMD_COPY\fR

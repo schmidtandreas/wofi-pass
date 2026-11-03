@@ -14,6 +14,8 @@ FLAG_HELP=0
 FLAG_HOTKEYS_SUPPORTED=1
 FLAG_CASE_INSENSITIVE=0
 
+WOFI_PASS_PRESELECT="${WOFI_PASS_PRESELECT:-""}"
+
 CMD_COPY="${CMD_COPY:-"wl-copy"}"
 CMD_TYPE="${CMD_TYPE:-"wtype -"}"
 
@@ -233,6 +235,8 @@ function usage()
         -c, --copy=[cmd]  copy to clipboard. Defaults to wl-copy if no cmd is given.
         -f, --fileisuser  use the name of the password file as username
         -h, --help        show this help message
+        -p, --preselect=text preselect an entry or directory. With --autotype,
+                          output a unique partial entry match without a menu.
         -s, --squash      don't show field choice if password file only contains password
         -t, --type=[cmd]  type the selection instead of copying to clipboard.
                           Defaults to wtype if no cmd is given.
@@ -272,7 +276,7 @@ load_config_file()
 function parse_arguments()
 {
     local autotype_selected=0
-    OPTS="$(getopt --options a::c::fhsit::k --longoptions autotype::,copy::,fileisuser,help,squash,type::,nohotkey,insensitive -n 'wofi-pass' -- "${@}")" || return 1
+    OPTS="$(getopt --options a::c::fhip:st::k --longoptions autotype::,copy::,fileisuser,help,preselect:,squash,type::,nohotkey,insensitive -n 'wofi-pass' -- "${@}")" || return 1
     eval set -- "${OPTS}"
     while true; do
         case "${1}" in
@@ -304,6 +308,14 @@ function parse_arguments()
             -i | --insensitive)
                 FLAG_CASE_INSENSITIVE=1
                 shift
+                ;;
+            -p | --preselect)
+                if [ -z "${2}" ]; then
+                    printf "preselection must not be empty.\n" >&2
+                    return 1
+                fi
+                WOFI_PASS_PRESELECT="${2}"
+                shift 2
                 ;;
             -s | --squash)
                 FLAG_SQUASH=1
@@ -360,6 +372,40 @@ function get_passname_from_menu()
     wofi_args+=("--dmenu")
     if [ ${FLAG_CASE_INSENSITIVE} -eq 1 ]; then
         wofi_args+=("--insensitive")
+    fi
+    if [ -n "${WOFI_PASS_PRESELECT}" ]; then
+        local search="${WOFI_PASS_PRESELECT}"
+        local query="${search}"
+        local entry comparison
+        local matches=()
+        if [ ${FLAG_CASE_INSENSITIVE} -eq 1 ]; then
+            query="${query,,}"
+        fi
+        while IFS= read -r entry; do
+            [ -n "${entry}" ] || continue
+            comparison="${entry}"
+            if [ ${FLAG_CASE_INSENSITIVE} -eq 1 ]; then
+                comparison="${comparison,,}"
+            fi
+            if [[ "${comparison}" == *"${query}"* ]]; then
+                matches+=("${entry}")
+            fi
+        done <<< "${password_files}"
+        if [ "${#matches[@]}" -eq 1 ]; then
+            comparison="${matches[0]}"
+            if [ ${FLAG_CASE_INSENSITIVE} -eq 1 ]; then
+                comparison="${comparison,,}"
+            fi
+            # Directory-only matches still need an explicit entry selection.
+            if [[ "${comparison}" != */* || "${comparison%/*}/" != *"${query}"* || "${comparison##*/}" == *"${query}"* ]]; then
+                if [ ${FLAG_AUTOTYPE} -eq 1 ]; then
+                    printf "%s" "${matches[0]}"
+                    return 0
+                fi
+                search="${matches[0]}"
+            fi
+        fi
+        wofi_args+=("--search" "${search}")
     fi
     if [ ${FLAG_HOTKEYS_SUPPORTED} -eq 1 ]; then
         [ -n "${HOTKEY_USERNAME}" ] && wofi_args+=("-D" "key_custom_0=${HOTKEY_USERNAME}")

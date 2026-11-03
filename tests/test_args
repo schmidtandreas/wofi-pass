@@ -46,6 +46,25 @@ test_args_autotype() {
     argument_testing "a" "autotype" "FLAG_AUTOTYPE" 1
 }
 
+test_args_preselect() {
+    parse_arguments -p "work/github" -a -t
+    assert_equals "work/github" "${WOFI_PASS_PRESELECT}"
+    assert_equals 1 "${FLAG_AUTOTYPE}"
+    assert_equals 1 "${FLAG_TYPE}"
+    parse_arguments --preselect="personal/gitlab" -f
+    assert_equals "personal/gitlab" "${WOFI_PASS_PRESELECT}"
+    assert_equals 1 "${FLAG_FILEISUSER}"
+    parse_arguments -pentry
+    assert_equals "entry" "${WOFI_PASS_PRESELECT}"
+    parse_arguments --preselect "entry with spaces"
+    assert_equals "entry with spaces" "${WOFI_PASS_PRESELECT}"
+}
+
+test_args_preselect_invalid() {
+    assert_status_code 1 "parse_arguments --preselect"
+    assert_status_code 1 "parse_arguments --preselect=''"
+}
+
 test_args_autotype_numbered() {
     local WOFI_PASS_AUTOTYPE="default"
     local WOFI_PASS_AUTOTYPE_1="one"
