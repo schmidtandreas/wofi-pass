@@ -46,6 +46,122 @@ test_args_autotype() {
     argument_testing "a" "autotype" "FLAG_AUTOTYPE" 1
 }
 
+test_args_autotype_numbered() {
+    local WOFI_PASS_AUTOTYPE="default"
+    local WOFI_PASS_AUTOTYPE_1="one"
+    local WOFI_PASS_AUTOTYPE_2="two"
+    local WOFI_PASS_AUTOTYPE_3="three"
+    local WOFI_PASS_AUTOTYPE_4="four"
+    local WOFI_PASS_AUTOTYPE_5="five"
+    local WOFI_PASS_AUTOTYPE_6="six"
+    local WOFI_PASS_AUTOTYPE_7="seven"
+    local WOFI_PASS_AUTOTYPE_8="eight"
+    local WOFI_PASS_AUTOTYPE_9="nine"
+    local -a expected=("default" "one" "two" "three" "four" "five" "six" "seven" "eight" "nine")
+    local index
+    for index in {0..9}; do
+        parse_arguments "-a${index}"
+        assert_equals "${expected[${index}]}" "${WOFI_PASS_AUTOTYPE}"
+        parse_arguments "--autotype=${index}"
+        assert_equals "${expected[${index}]}" "${WOFI_PASS_AUTOTYPE}"
+    done
+}
+
+test_args_autotype_default() {
+    WOFI_PASS_AUTOTYPE="custom default"
+    parse_arguments -a
+    assert_equals "custom default" "${WOFI_PASS_AUTOTYPE}"
+    parse_arguments --autotype
+    assert_equals "custom default" "${WOFI_PASS_AUTOTYPE}"
+    parse_arguments --autotype=default
+    assert_equals "custom default" "${WOFI_PASS_AUTOTYPE}"
+    parse_arguments -adefault
+    assert_equals "custom default" "${WOFI_PASS_AUTOTYPE}"
+}
+
+test_args_autotype_aliases() {
+    local index
+    for index in {1..9}; do
+        printf -v "WOFI_PASS_AUTOTYPE_${index}" "%s" "format ${index}"
+        printf -v "WOFI_PASS_AUTOTYPE_${index}_ALIAS" "%s" "alias-${index}"
+    done
+    for index in {1..9}; do
+        parse_arguments "--autotype=alias-${index}"
+        assert_equals "format ${index}" "${WOFI_PASS_AUTOTYPE}"
+        parse_arguments "-aalias-${index}"
+        assert_equals "format ${index}" "${WOFI_PASS_AUTOTYPE}"
+        parse_arguments "-a${index}"
+        assert_equals "format ${index}" "${WOFI_PASS_AUTOTYPE}"
+    done
+}
+
+test_args_autotype_invalid_aliases() {
+    WOFI_PASS_AUTOTYPE_1_ALIAS="work"
+    WOFI_PASS_AUTOTYPE_2_ALIAS="work"
+    assert_status_code 1 "parse_arguments --autotype=work"
+    local alias
+    for alias in "default" "2" "work login" $'two\nlines' $'with\ttab'; do
+        WOFI_PASS_AUTOTYPE_2_ALIAS="${alias}"
+        assert_status_code 1 "parse_arguments -a1"
+    done
+}
+
+test_args_autotype_following_options() {
+    FLAG_TYPE=0
+    FLAG_FILEISUSER=0
+    parse_arguments -a -t -f
+    assert_equals 1 "${FLAG_TYPE}"
+    assert_equals 1 "${FLAG_FILEISUSER}"
+}
+
+test_args_autotype_invalid() {
+    local value
+    for value in -1 10 01 abc '1,2' '1+1'; do
+        assert_status_code 1 "parse_arguments --autotype='${value}'"
+    done
+}
+
+test_args_autotype_repeated() {
+    assert_status_code 1 "parse_arguments -a1 --autotype=2"
+    assert_status_code 1 "parse_arguments -a -a"
+    assert_status_code 1 "parse_arguments -a1 -a1"
+}
+
+test_args_optional_commands_following_options() {
+    local option
+    for option in -c --copy -t --type -ccustom-copy --copy=custom-copy -tcustom-type --type=custom-type; do
+        FLAG_COPY=0
+        FLAG_TYPE=0
+        FLAG_FILEISUSER=0
+        FLAG_AUTOTYPE=0
+        FLAG_HOTKEYS_SUPPORTED=1
+        CMD_COPY="wl-copy"
+        CMD_TYPE="wtype -"
+        parse_arguments "${option}" -f -a9 -k
+        assert_equals 1 "${FLAG_FILEISUSER}" "following -f lost after ${option}"
+        assert_equals 1 "${FLAG_AUTOTYPE}" "following -a9 lost after ${option}"
+        assert_equals 0 "${FLAG_HOTKEYS_SUPPORTED}" "following -k lost after ${option}"
+        case "${option}" in
+            -c | --copy)
+                assert_equals 1 "${FLAG_COPY}"
+                assert_equals "wl-copy" "${CMD_COPY}"
+                ;;
+            -t | --type)
+                assert_equals 1 "${FLAG_TYPE}"
+                assert_equals "wtype -" "${CMD_TYPE}"
+                ;;
+            -ccustom-copy | --copy=custom-copy)
+                assert_equals 1 "${FLAG_COPY}"
+                assert_equals "custom-copy" "${CMD_COPY}"
+                ;;
+            -tcustom-type | --type=custom-type)
+                assert_equals 1 "${FLAG_TYPE}"
+                assert_equals "custom-type" "${CMD_TYPE}"
+                ;;
+        esac
+    done
+}
+
 test_args_copy() {
     argument_testing "c" "copy" "FLAG_COPY" 1
     argument_testing "c" "copy" "FLAG_COPY" 1 "new-copy-cmd"

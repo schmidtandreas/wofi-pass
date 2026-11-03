@@ -32,6 +32,34 @@ test_config_load_test_conf() {
     assert_equals "changed" "${TEST_VAR1}" "config load: sourcing of "${TEST_CONFIG_FILE}" failed"
 }
 
+test_config_autotype_defaults() {
+    fake get_config_file echo "${TEST_CONFIG_FILE}"
+    fake _pass <<EOF
+paSSw0rd
+username: user
+EOF
+    WOFI_PASS_AUTOTYPE_9=":username"
+    load_config_file
+    FLAG_TYPE=1
+    local index format
+    for index in 1 3 4 5 6 7 8; do
+        format="$(get_autotype_format "${index}")"
+        assert_equals ":password" "${format}"
+    done
+    format="$(get_autotype_format 2)"
+    assert_equals ":username :tab :password" "${format}"
+    format="$(get_autotype_format 9)"
+    assert_equals ":username" "${format}"
+
+    local output
+    output="$(parse_fields "passname")"
+    assert_equals $'autotype default\nautotype login\nautotype 9\npassword\nusername' "${output}"
+    parse_arguments -a1
+    assert_equals ":password" "${WOFI_PASS_AUTOTYPE}"
+    parse_arguments --autotype=login
+    assert_equals ":username :tab :password" "${WOFI_PASS_AUTOTYPE}"
+}
+
 test_config_get_user_config_file() {
     assert "[ ! -f \"${USER_CFG_FILE}\" ]" "config: test environment contains ${USER_CFG_FILE}"
 

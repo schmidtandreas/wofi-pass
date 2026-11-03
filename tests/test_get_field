@@ -72,6 +72,25 @@ test_get_field_mulitfields() {
     assert_equals "" "${output}" "get field: autotype: output not empty"
 }
 
+test_get_field_numbered_autotype_menu() {
+    fake _pass <<EOF
+paSSw0rd
+username: user
+EOF
+    FLAG_TYPE=1
+    WOFI_PASS_AUTOTYPE_2=":password"
+    fake _wofi fake_wofi 1
+    local output
+    output="$(get_field_from_menu "passname")"
+    assert_equals "autotype 2" "${output}"
+    output="$(get_field_from_menu "passname" "${HOTKEY_AUTOTYPE_RET}")"
+    assert_equals "autotype" "${output}"
+
+    WOFI_PASS_AUTOTYPE_2_ALIAS="work-login"
+    output="$(get_field_from_menu "passname")"
+    assert_equals "autotype work-login" "${output}"
+}
+
 setup_suite() {
     WOFI_PASS_TESTING="1"
     source ../wofi-pass

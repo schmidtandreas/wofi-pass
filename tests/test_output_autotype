@@ -108,6 +108,36 @@ test_output_autotype_customize_username() {
     assert_equals "userlogin" "${output}" "output autotype: unexpected output for customized username"
 }
 
+test_output_autotype_numbered() {
+    fake pass_get fake_pass_get
+    fake press_key fake_press_key
+    WOFI_PASS_AUTOTYPE_1=":password"
+    WOFI_PASS_AUTOTYPE_9=":password :tab :username"
+    parse_arguments -a1
+    local output
+    output="$(output_autotype "/dir/dir1/passname" "fake_cmd_output")"
+    assert_equals "paSSw0rd" "${output}"
+    parse_arguments --autotype=9
+    output="$(output_autotype "/dir/dir1/passname" "fake_cmd_output")"
+    assert_equals $'paSSw0rd\tuser@e-mail.com' "${output}"
+    FLAG_TYPE=1
+    output="$(output_autotype "/dir/dir1/passname" "fake_cmd_output")"
+    assert_equals "paSSw0rd<Tab>user@e-mail.com" "${output}"
+}
+
+fake_pass_with_autotype() {
+    printf '%s\n' "paSSw0rd" "username: user" "autotype: :username"
+}
+
+test_output_autotype_entry_override() {
+    fake _pass fake_pass_with_autotype
+    WOFI_PASS_AUTOTYPE_9=":password"
+    parse_arguments -a9
+    local output
+    output="$(output_autotype "/dir/dir1/passname" "fake_cmd_output")"
+    assert_equals "user" "${output}"
+}
+
 setup_suite() {
 	WOFI_PASS_TESTING=1
 	source ../wofi-pass

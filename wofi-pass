@@ -21,6 +21,49 @@ CMD_TYPE="${CMD_TYPE:-"wtype -"}"
 PASS_FIELD_USERNAME="${PASS_FIELD_USERNAME:-"username"}"
 
 WOFI_PASS_AUTOTYPE="${WOFI_PASS_AUTOTYPE:-":username :tab :password"}"
+
+function initialize_autotype_formats()
+{
+    WOFI_PASS_AUTOTYPE_1="${WOFI_PASS_AUTOTYPE_1:-"${WOFI_PASS_AUTOTYPE}"}"
+    WOFI_PASS_AUTOTYPE_2="${WOFI_PASS_AUTOTYPE_2:-"${WOFI_PASS_AUTOTYPE}"}"
+    WOFI_PASS_AUTOTYPE_3="${WOFI_PASS_AUTOTYPE_3:-"${WOFI_PASS_AUTOTYPE}"}"
+    WOFI_PASS_AUTOTYPE_4="${WOFI_PASS_AUTOTYPE_4:-"${WOFI_PASS_AUTOTYPE}"}"
+    WOFI_PASS_AUTOTYPE_5="${WOFI_PASS_AUTOTYPE_5:-"${WOFI_PASS_AUTOTYPE}"}"
+    WOFI_PASS_AUTOTYPE_6="${WOFI_PASS_AUTOTYPE_6:-"${WOFI_PASS_AUTOTYPE}"}"
+    WOFI_PASS_AUTOTYPE_7="${WOFI_PASS_AUTOTYPE_7:-"${WOFI_PASS_AUTOTYPE}"}"
+    WOFI_PASS_AUTOTYPE_8="${WOFI_PASS_AUTOTYPE_8:-"${WOFI_PASS_AUTOTYPE}"}"
+    WOFI_PASS_AUTOTYPE_9="${WOFI_PASS_AUTOTYPE_9:-"${WOFI_PASS_AUTOTYPE}"}"
+
+    AUTOTYPE_ALIASES=(
+        "default"
+        "${WOFI_PASS_AUTOTYPE_1_ALIAS:-""}"
+        "${WOFI_PASS_AUTOTYPE_2_ALIAS:-""}"
+        "${WOFI_PASS_AUTOTYPE_3_ALIAS:-""}"
+        "${WOFI_PASS_AUTOTYPE_4_ALIAS:-""}"
+        "${WOFI_PASS_AUTOTYPE_5_ALIAS:-""}"
+        "${WOFI_PASS_AUTOTYPE_6_ALIAS:-""}"
+        "${WOFI_PASS_AUTOTYPE_7_ALIAS:-""}"
+        "${WOFI_PASS_AUTOTYPE_8_ALIAS:-""}"
+        "${WOFI_PASS_AUTOTYPE_9_ALIAS:-""}"
+    )
+    local alias previous
+    local seen=()
+    for alias in "${AUTOTYPE_ALIASES[@]}"; do
+        [ -n "${alias}" ] || continue
+        if [[ "${alias}" =~ ^[0-9]+$ || "${alias}" =~ [[:space:]] ]]; then
+            printf "autotype aliases must be nonnumeric and contain no whitespace.\n" >&2
+            return 1
+        fi
+        for previous in "${seen[@]}"; do
+            if [ "${alias}" = "${previous}" ]; then
+                printf "duplicate autotype alias: %s\n" "${alias}" >&2
+                return 1
+            fi
+        done
+        seen+=("${alias}")
+    done
+}
+
 WOFI_PASS_DELAY=${WOFI_PASS_DELAY:-2}
 WOFI_PASS_AUTO_ENTER="${WOFI_PASS_AUTO_ENTER:-"false"}"
 
@@ -68,6 +111,37 @@ function generate_otp()
     }
 }
 
+function get_autotype_format()
+{
+    initialize_autotype_formats || return 1
+    local selection="${1}"
+    local index
+    if [[ ! "${selection}" =~ ^[0-9]$ ]]; then
+        for index in {0..9}; do
+            if [ -n "${AUTOTYPE_ALIASES[${index}]}" ] && [ "${selection}" = "${AUTOTYPE_ALIASES[${index}]}" ]; then
+                selection="${index}"
+                break
+            fi
+        done
+    fi
+    case "${selection}" in
+        0) printf "%s" "${WOFI_PASS_AUTOTYPE}" ;;
+        1) printf "%s" "${WOFI_PASS_AUTOTYPE_1}" ;;
+        2) printf "%s" "${WOFI_PASS_AUTOTYPE_2}" ;;
+        3) printf "%s" "${WOFI_PASS_AUTOTYPE_3}" ;;
+        4) printf "%s" "${WOFI_PASS_AUTOTYPE_4}" ;;
+        5) printf "%s" "${WOFI_PASS_AUTOTYPE_5}" ;;
+        6) printf "%s" "${WOFI_PASS_AUTOTYPE_6}" ;;
+        7) printf "%s" "${WOFI_PASS_AUTOTYPE_7}" ;;
+        8) printf "%s" "${WOFI_PASS_AUTOTYPE_8}" ;;
+        9) printf "%s" "${WOFI_PASS_AUTOTYPE_9}" ;;
+        *)
+            printf "autotype must be a number from 0 to 9 or a configured alias.\n" >&2
+            return 1
+            ;;
+    esac
+}
+
 function parse_fields()
 {
     local field_list
@@ -107,7 +181,16 @@ function parse_fields()
     done
 
     if [ ${FLAG_TYPE} -eq 1 ] && [ ${has_username} -eq 1 ]; then
-        field_list=("autotype" "${field_list[@]}")
+        initialize_autotype_formats || return 1
+        local autotype_fields=("autotype ${AUTOTYPE_ALIASES[0]}")
+        local index format
+        for index in {1..9}; do
+            format="$(get_autotype_format "${index}")" || return 1
+            if [ "${format}" != "${WOFI_PASS_AUTOTYPE}" ]; then
+                autotype_fields+=("autotype ${AUTOTYPE_ALIASES[${index}]:-${index}}")
+            fi
+        done
+        field_list=("${autotype_fields[@]}" "${field_list[@]}")
     fi
 
     printf "%s\n" "${field_list[@]}"
@@ -145,7 +228,8 @@ function usage()
     wofi-pass [options]
 
     Options:
-        -a, --autotype    autotype whatever entry is chosen
+        -a, --autotype[=name] autotype using format 0-9 or an alias (default: 0).
+                          Use -aNAME or --autotype=NAME. Only one selection is allowed.
         -c, --copy=[cmd]  copy to clipboard. Defaults to wl-copy if no cmd is given.
         -f, --fileisuser  use the name of the password file as username
         -h, --help        show this help message
@@ -187,22 +271,27 @@ load_config_file()
 
 function parse_arguments()
 {
-    OPTS="$(getopt --options ac::fhsit::k --longoptions autotype,copy::,fileisuser,help,squash,type::,nohotkey,insensitive -n 'wofi-pass' -- "${@}")"
+    local autotype_selected=0
+    OPTS="$(getopt --options a::c::fhsit::k --longoptions autotype::,copy::,fileisuser,help,squash,type::,nohotkey,insensitive -n 'wofi-pass' -- "${@}")" || return 1
     eval set -- "${OPTS}"
     while true; do
         case "${1}" in
             -a | --autotype)
+                if [ "${autotype_selected}" -eq 1 ]; then
+                    printf "only one -a/--autotype selection is allowed.\n" >&2
+                    return 1
+                fi
+                WOFI_PASS_AUTOTYPE="$(get_autotype_format "${2:-0}")" || return 1
+                autotype_selected=1
                 FLAG_AUTOTYPE=1
-                shift
+                shift 2
                 ;;
             -c | --copy)
                 FLAG_COPY=1
                 if [ -n "${2}" ]; then
                     CMD_COPY="${2}"
-                    shift 2
-                else
-                    shift
                 fi
+                shift 2
                 ;;
             -f | --fileisuser)
                 FLAG_FILEISUSER=1
@@ -224,10 +313,8 @@ function parse_arguments()
                 FLAG_TYPE=1
                 if [ -n "${2}" ]; then
                     CMD_TYPE="${2}"
-                    shift 2
-                else
-                    shift
                 fi
+                shift 2
                 ;;
             -k | --nohotkey)
                 FLAG_HOTKEYS_SUPPORTED=0
@@ -347,7 +434,7 @@ function output_autotype()
     local autotype
 
     autotype="$(pass_get "${passname}" "autotype")"
-    [ -z "${autotype}" ] && autotype="${WOFI_PASS_AUTOTYPE}"
+    autotype="${autotype:-"${3-${WOFI_PASS_AUTOTYPE}}"}"
     readonly autotype
 
     for word in ${autotype}; do
@@ -371,15 +458,22 @@ function output_field()
     local cmd_output
     local -r passname="${1}"
     local -r field="${2}"
+    local autotype_selected="${FLAG_AUTOTYPE}"
+    local autotype_format="${WOFI_PASS_AUTOTYPE}"
     cmd_output="$(get_output_cmd)"
 
-    if [ ${FLAG_AUTOTYPE} -eq 1 ] || [ "${field}" = "autotype" ]; then
+    if [ ${FLAG_AUTOTYPE} -eq 0 ] && [[ "${field}" == "autotype "?* ]]; then
+        autotype_format="$(get_autotype_format "${field#autotype }")" || return 1
+        autotype_selected=1
+    fi
+
+    if [ ${autotype_selected} -eq 1 ] || [ "${field}" = "autotype" ]; then
         # check if we are autotyping a password-only file
         if [ ${FLAG_ONLYPASSWORD} -eq 1 ]; then
             local -r password="$(pass_get "${passname}" "password")"
             printf '%s\n' "${password}" | ${cmd_output}
         else
-            output_autotype "${passname}" "${cmd_output}"
+            output_autotype "${passname}" "${cmd_output}" "${autotype_format}"
         fi
     else
         pass_get "${passname}" "${field}" | ${cmd_output}
@@ -395,7 +489,9 @@ function main()
 
     load_config_file
 
-    parse_arguments "${@}"
+    initialize_autotype_formats || exit 1
+
+    parse_arguments "${@}" || exit 1
 
     exit_if_help_flag_set
 

@@ -3,7 +3,7 @@
 # wofi-pass
 ```
 Usage: wofi-pass [options]
-	-a, --autotype		autotype whatever entry is chosen
+	-a, --autotype[=name]	autotype using format 0-9 or an alias (default: 0)
 	-c, --copy [cmd]	copy to clipboard. Defaults to wl-copy if no cmd is given.
 	-f, --fileisuser	use the name of the password file as username
 	-h, --help		show this help message
@@ -64,3 +64,44 @@ If `${XDG_CONFIG_HOME}` environment variable is not set,
 If no configuration file exists, `wofi-pass` uses its internal defaults.
 
 An example configuration file can be found in the supplied `wofi-pass.conf` file.
+
+### Multiple autotype formats
+
+Define up to ten formats: `WOFI_PASS_AUTOTYPE` (format 0) and
+`WOFI_PASS_AUTOTYPE_1` through `WOFI_PASS_AUTOTYPE_9`. For example:
+
+```bash
+WOFI_PASS_AUTOTYPE=":username :tab :password"
+WOFI_PASS_AUTOTYPE_1=":password"
+WOFI_PASS_AUTOTYPE_2=":username :tab :password :tab :otp"
+```
+
+Select one format per invocation with `wofi-pass -t -a1` or
+`wofi-pass -t --autotype=2`. The number must be attached to `-a`, or
+provided with `=` for `--autotype`. Plain `-a` and `-a0` use the default.
+Repeated autotype options and unknown formats are rejected.
+Without `--autotype`, type mode (`-t`) also lists numbered formats in the
+field-selection menu as `autotype 1` through `autotype 9`, where a username is
+available. Numbered formats matching `WOFI_PASS_AUTOTYPE` are hidden. Select a numbered
+entry to use it; `autotype default` and `Alt-a` use format 0.
+Format 0 has the fixed, reserved alias `default`, selectable with
+`--autotype=default` or `-adefault`.
+Unset or empty numbered formats inherit `WOFI_PASS_AUTOTYPE` after the
+configuration file is loaded. Override each desired format in the
+configuration file. An `autotype` field in the password entry overrides the
+selected format.
+
+Set `WOFI_PASS_AUTOTYPE_1_ALIAS` through `WOFI_PASS_AUTOTYPE_9_ALIAS` to
+optionally name a numbered format:
+
+```bash
+WOFI_PASS_AUTOTYPE_1=":password"
+WOFI_PASS_AUTOTYPE_1_ALIAS="work-login"
+```
+
+The menu then shows `autotype work-login` instead of `autotype 1`.
+Use `wofi-pass -t --autotype=work-login` or `wofi-pass -t -awork-login`
+to select it directly. Numeric selection (`-a1`) still works.
+Aliases must be unique, nonnumeric, and contain no whitespace; matching is
+case-sensitive. An unset or empty alias keeps the numeric label. Formats
+matching the default remain hidden even if they have an alias.

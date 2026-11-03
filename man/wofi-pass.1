@@ -7,8 +7,8 @@
 \fBwofi\-pass\fR [\fIOPTIONS\fR\|\.\|\.\|\.]
 .SH "OPTIONS"
 .TP
-\fB\-a\fR, \fB\-\-autotype\fR
-Autotype whatever entry is chosen\.
+\fB\-a\fR, \fB\-\-autotype\fR[=\fIname\fR]
+Autotype the chosen entry using format 0\-9 or a configured alias (default: 0)\. Use \fB\-aNAME\fR or \fB\-\-autotype=NAME\fR\. Only one autotype option is allowed per invocation\.
 .TP
 \fB\-c\fR, \fB\-\-copy\fR [\fIcmd\fR]
 Copy to clipboard\. Defaults to \fBwl\-copy\fR if no \fIcmd\fR is given\.
@@ -95,6 +95,14 @@ selecting the field \fBautotype\fR or press \fBHOTKEY_AUTOTYPE\fR hotkey will ou
 adding the field \fBautotype_always\fR to the \fBpass\fR entry, this entry will always be output formatted\.
 .IP "" 0
 .SS "AUTOTYPE FORMAT"
+Format 0 has the fixed, reserved alias \fBdefault\fR, selectable with \fB\-\-autotype=default\fR or \fB\-adefault\fR, and appears as \fBautotype default\fR in the menu\.
+.P
+Set \fBWOFI_PASS_AUTOTYPE_1_ALIAS\fR through \fBWOFI_PASS_AUTOTYPE_9_ALIAS\fR to name numbered formats\. For example, \fBWOFI_PASS_AUTOTYPE_1_ALIAS="work-login"\fR changes the menu label to \fBautotype work-login\fR and allows \fB\-\-autotype=work-login\fR\. Numeric selection still works\. Aliases must be unique, nonnumeric, and contain no whitespace; matching is case-sensitive\. Empty aliases keep numeric labels\. Formats matching the default remain hidden even if they have an alias\.
+.P
+Without \fB\-\-autotype\fR, type mode (\fB\-t\fR) lists numbered formats in the field menu as \fBautotype 1\fR through \fBautotype 9\fR, where a username is available\. Numbered formats matching \fBWOFI_PASS_AUTOTYPE\fR are hidden\. Selecting one uses that format; \fBautotype default\fR and \fBHOTKEY_AUTOTYPE\fR keep using format 0\.
+.P
+Up to ten formats can be defined: \fBWOFI_PASS_AUTOTYPE\fR is format 0, and \fBWOFI_PASS_AUTOTYPE_1\fR through \fBWOFI_PASS_AUTOTYPE_9\fR define formats 1\-9\. Select one with \fB\-a1\fR or \fB\-\-autotype=1\fR, for example\. Plain \fB\-a\fR and \fB\-a0\fR select format 0\. Unset or empty numbered formats inherit \fBWOFI_PASS_AUTOTYPE\fR after the configuration file is loaded\. Override each desired format in the configuration file\. An \fBautotype\fR field in the password entry overrides the selected format\.
+.P
 The format of the \fIautotype\fR is by default is as follows:
 .P
 \fBusername :tab pass\fR

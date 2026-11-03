@@ -7,8 +7,9 @@ wofi-pass(1) -- pass support for wofi
 
 ## OPTIONS
 
-* `-a`, `--autotype`:
-Autotype whatever entry is chosen.
+* `-a`, `--autotype`[=<name>]:
+Autotype the chosen entry using format 0-9 or a configured alias (default: 0).
+Use `-aNAME` or `--autotype=NAME`. Only one autotype option is allowed per invocation.
 
 * `-c`, `--copy` [<cmd>]:
 Copy to clipboard. Defaults to `wl-copy` if no <cmd> is given.
@@ -122,6 +123,29 @@ The format of the <autotype> is by default is as follows:
 `username :tab pass`
 
 and is defined by `WOFI_PASS_AUTOTYPE`.
+Up to ten formats can be defined: `WOFI_PASS_AUTOTYPE` is format 0, and
+`WOFI_PASS_AUTOTYPE_1` through `WOFI_PASS_AUTOTYPE_9` define formats 1-9.
+Select one with `-a1` or `--autotype=1`, for example.
+Plain `-a` and `-a0` select format 0.
+Format 0 has the fixed, reserved alias `default`, selectable with
+`--autotype=default` or `-adefault`, and appears as `autotype default` in the menu.
+Without `--autotype`, type mode (`-t`) lists numbered formats in the field menu
+as `autotype 1` through `autotype 9`, where a username is available.
+Numbered formats matching `WOFI_PASS_AUTOTYPE` are hidden.
+Selecting one uses that format; `autotype default` and `HOTKEY_AUTOTYPE` keep using
+format 0.
+Unset or empty numbered formats inherit `WOFI_PASS_AUTOTYPE` after the
+configuration file is loaded. Override each desired format in the
+configuration file. An `autotype` field in the password entry overrides the
+selected format.
+
+Set `WOFI_PASS_AUTOTYPE_1_ALIAS` through `WOFI_PASS_AUTOTYPE_9_ALIAS` to name
+numbered formats. For example, `WOFI_PASS_AUTOTYPE_1_ALIAS="work-login"` changes
+the menu label to `autotype work-login` and allows `--autotype=work-login`.
+Numeric selection still works. Aliases must be unique, nonnumeric, and contain
+no whitespace; matching is case-sensitive. Empty aliases keep numeric labels.
+Formats matching the default remain hidden even if they have an alias.
+
 The autotype format string consists of a combination of keywords and pass fields separated by a space.
 The keywords are the follows:
 
@@ -154,4 +178,3 @@ Output the filename of selected `:pass` entry
 
 All other entries are interpreted as `pass` fields
 and output the contents of the respective field.
-

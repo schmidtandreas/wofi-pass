@@ -56,6 +56,63 @@ test_output_field_autotype() {
     assert_equals "paSSw0rd" "${output}" "output field: unexpected output for autotype"
 }
 
+test_output_field_numbered_autotype() {
+    fake get_output_cmd echo "fake_cmd_output"
+    fake pass_get fake_pass_get
+    WOFI_PASS_AUTOTYPE_1=":password"
+    WOFI_PASS_AUTOTYPE_9=":username"
+    local output
+    output="$(output_field "passname" "autotype 1")"
+    assert_equals "paSSw0rd" "${output}"
+    output="$(output_field "passname" "autotype 9")"
+    assert_equals "user@e-mail.com" "${output}"
+    output="$(output_field "passname" "autotype")"
+    assert_equals $'user@e-mail.com\tpaSSw0rd' "${output}"
+    output="$(output_field "passname" "autotype default")"
+    assert_equals $'user@e-mail.com\tpaSSw0rd' "${output}"
+    assert_equals 0 "${FLAG_AUTOTYPE}"
+    assert_equals ":username :tab :password" "${WOFI_PASS_AUTOTYPE}"
+}
+
+test_output_field_numbered_autotype_entry_override() {
+    fake get_output_cmd echo "fake_cmd_output"
+    fake _pass <<EOF
+paSSw0rd
+username: user
+autotype: :username
+EOF
+    WOFI_PASS_AUTOTYPE_1=":password"
+    local output
+    output="$(output_field "passname" "autotype 1")"
+    assert_equals "user" "${output}"
+}
+
+test_output_field_cli_autotype_precedence() {
+    fake get_output_cmd echo "fake_cmd_output"
+    fake pass_get fake_pass_get
+    WOFI_PASS_AUTOTYPE_1=":password"
+    WOFI_PASS_AUTOTYPE_9=":username"
+    parse_arguments -a1
+    local output
+    output="$(output_field "passname" "autotype 9")"
+    assert_equals "paSSw0rd" "${output}"
+}
+
+test_output_field_autotype_alias() {
+    fake get_output_cmd echo "fake_cmd_output"
+    fake pass_get fake_pass_get
+    WOFI_PASS_AUTOTYPE_1=":password"
+    WOFI_PASS_AUTOTYPE_1_ALIAS="work-login"
+    local output
+    output="$(output_field "passname" "autotype work-login")"
+    assert_equals "paSSw0rd" "${output}"
+    output="$(output_field "passname" "autotype 1")"
+    assert_equals "paSSw0rd" "${output}"
+    parse_arguments --autotype=work-login
+    output="$(output_field "passname" "")"
+    assert_equals "paSSw0rd" "${output}"
+}
+
 setup_suite() {
     WOFI_PASS_TESTING=1
     source ../wofi-pass

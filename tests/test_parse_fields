@@ -93,6 +93,81 @@ EOF
     verify_parsed_fields ${expected_autotype} "${expected_array[@]}"
 }
 
+test_parse_fields_autotype_menu() {
+    fake _pass <<EOF
+paSSw0rd
+username: user
+EOF
+    FLAG_TYPE=1
+    WOFI_PASS_AUTOTYPE_2=":password"
+    WOFI_PASS_AUTOTYPE_9=":username"
+    local expected_autotype=0
+    verify_parsed_fields 0 "autotype default" "autotype 2" "autotype 9" "password" "username"
+
+    FLAG_TYPE=0
+    verify_parsed_fields 0 "password" "username"
+}
+
+test_parse_fields_autotype_menu_defaults() {
+    fake _pass <<EOF
+paSSw0rd
+username: user
+EOF
+    FLAG_TYPE=1
+    WOFI_PASS_AUTOTYPE_1_ALIAS="same-as-default"
+    local expected_autotype=0
+    verify_parsed_fields 0 "autotype default" "password" "username"
+}
+
+test_parse_fields_autotype_menu_aliases() {
+    fake _pass <<EOF
+paSSw0rd
+username: user
+EOF
+    FLAG_TYPE=1
+    WOFI_PASS_AUTOTYPE_1=":password"
+    WOFI_PASS_AUTOTYPE_1_ALIAS="work-login"
+    WOFI_PASS_AUTOTYPE_9=":username"
+    local expected_autotype=0
+    verify_parsed_fields 0 "autotype default" "autotype work-login" "autotype 9" "password" "username"
+}
+
+test_parse_fields_autotype_menu_custom_zero() {
+    fake _pass <<EOF
+paSSw0rd
+username: user
+EOF
+    FLAG_TYPE=1
+    WOFI_PASS_AUTOTYPE=":password"
+    local expected_autotype=0
+    local index
+    for index in {1..9}; do
+        printf -v "WOFI_PASS_AUTOTYPE_${index}" "%s" "${WOFI_PASS_AUTOTYPE}"
+    done
+    verify_parsed_fields 0 "autotype default" "password" "username"
+
+    WOFI_PASS_AUTOTYPE_1=":username"
+    WOFI_PASS_AUTOTYPE_9=":password"
+    verify_parsed_fields 0 "autotype default" "autotype 1" "password" "username"
+}
+
+test_parse_fields_autotype_menu_all_numbered_different() {
+    fake _pass <<EOF
+paSSw0rd
+username: user
+EOF
+    FLAG_TYPE=1
+    WOFI_PASS_AUTOTYPE=":password"
+    local expected_autotype=0
+    local index
+    for index in {1..9}; do
+        printf -v "WOFI_PASS_AUTOTYPE_${index}" "%s" ":username"
+    done
+    verify_parsed_fields 0 "autotype default" "autotype 1" "autotype 2" "autotype 3" \
+        "autotype 4" "autotype 5" "autotype 6" "autotype 7" "autotype 8" \
+        "autotype 9" "password" "username"
+}
+
 test_parse_fields_ignore() {
     fake _pass <<EOF
 paSSw0rd
